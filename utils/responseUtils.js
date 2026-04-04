@@ -1,5 +1,6 @@
 class ResponseUtils {
   success(res, data, message = 'Thành công', statusCode = 200) {
+    console.log('ResponseUtils.success', { statusCode, message });
     return res.status(statusCode).json({
       success: true,
       message,
@@ -8,6 +9,7 @@ class ResponseUtils {
   }
 
   error(res, message = 'Có lỗi xảy ra', statusCode = 500, errors = null) {
+    console.log('ResponseUtils.error', { statusCode, message, errors });
     return res.status(statusCode).json({
       success: false,
       message,

@@ -22,6 +22,30 @@ Server API cho ứng dụng quản lý chi tiêu cá nhân, xây dựng với No
 - ✅ Cập nhật thông tin cá nhân
 - ✅ Đổi mật khẩu
 
+### Quản Lý Ví (Wallets)
+- ✅ Tạo ví mới
+- ✅ Xem danh sách ví
+- ✅ Xem chi tiết ví với số dư hiện tại
+- ✅ Cập nhật thông tin ví
+- ✅ Xóa ví (soft delete)
+- ✅ Tính toán số dư tự động từ giao dịch
+
+### Quản Lý Giao Dịch (Transactions)
+- ✅ Tạo giao dịch thu nhập/chi tiêu
+- ✅ Xem danh sách giao dịch (tất cả hoặc theo ví)
+- ✅ Lọc giao dịch theo loại, danh mục, thời gian
+- ✅ Xem chi tiết giao dịch
+- ✅ Cập nhật giao dịch
+- ✅ Xóa giao dịch
+- ✅ Thống kê thu chi theo ví và khoảng thời gian
+
+### Quản Lý Danh Mục (Categories)
+- ✅ Tạo danh mục thu nhập/chi tiêu
+- ✅ Xem danh sách danh mục
+- ✅ Lọc danh mục theo loại
+- ✅ Cập nhật danh mục
+- ✅ Xóa danh mục
+
 ## 🛠 Công Nghệ Sử Dụng
 
 - **Node.js** - JavaScript runtime
@@ -38,16 +62,29 @@ QLCT_Server/
 ├── config/
 │   └── database.js           # Cấu hình Prisma Client
 ├── controllers/
-│   └── authController.js     # Controller xử lý authentication
+│   ├── authController.js     # Controller xử lý authentication
+│   ├── walletController.js   # Controller xử lý wallet
+│   ├── transactionController.js  # Controller xử lý transaction
+│   └── categoryController.js # Controller xử lý category
 ├── middleware/
 │   ├── authMiddleware.js     # Middleware xác thực JWT
+│   ├── requestLogger.js      # Middleware logging requests
 │   └── validateRequest.js    # Middleware validate request
 ├── repositories/
-│   └── userRepository.js     # Data access layer cho User
+│   ├── userRepository.js     # Data access layer cho User
+│   ├── walletRepository.js   # Data access layer cho Wallet
+│   ├── transactionRepository.js  # Data access layer cho Transaction
+│   └── categoryRepository.js # Data access layer cho Category
 ├── routes/
-│   └── authRoutes.js         # Định nghĩa routes cho auth
+│   ├── authRoutes.js         # Định nghĩa routes cho auth
+│   ├── walletRoutes.js       # Định nghĩa routes cho wallet
+│   ├── transactionRoutes.js  # Định nghĩa routes cho transaction
+│   └── categoryRoutes.js     # Định nghĩa routes cho category
 ├── services/
-│   └── authService.js        # Business logic cho auth
+│   ├── authService.js        # Business logic cho auth
+│   ├── walletService.js      # Business logic cho wallet
+│   ├── transactionService.js # Business logic cho transaction
+│   └── categoryService.js    # Business logic cho category
 ├── utils/
 │   ├── jwtUtils.js           # Utility functions cho JWT
 │   ├── passwordUtils.js      # Utility functions cho password
@@ -56,7 +93,11 @@ QLCT_Server/
 │   └── schema.prisma         # Database schema
 ├── .env                      # Environment variables
 ├── server.js                 # Entry point
-└── package.json
+├── package.json
+├── API_DOCUMENTATION.md      # Tài liệu API chi tiết
+├── ROUTES_SUMMARY.md         # Tổng quan routes
+├── TEST_CASES.md             # Test cases với curl
+└── QUICKSTART_API.md         # Hướng dẫn test nhanh
 ```
 
 ## 🚀 Cài Đặt
@@ -116,12 +157,32 @@ NODE_ENV="development"
 
 ## 📚 API Documentation
 
+Chi tiết đầy đủ về API có thể tìm thấy trong các file sau:
+
+- **[API_DOCUMENTATION.md](./API_DOCUMENTATION.md)** - Tài liệu chi tiết tất cả API endpoints
+- **[ROUTES_SUMMARY.md](./ROUTES_SUMMARY.md)** - Tổng quan về routes và architecture  
+- **[TEST_CASES.md](./TEST_CASES.md)** - Các test cases với curl commands
+- **[QUICKSTART_API.md](./QUICKSTART_API.md)** - Hướng dẫn test nhanh API
+
+### Quick API Overview
+
+| Module | Endpoints |
+|--------|-----------|
+| **Auth** | `/api/auth/*` - Register, Login, Profile, Change Password |
+| **Wallets** | `/api/wallets/*` - CRUD wallets, xem số dư |
+| **Transactions** | `/api/transactions/*` - CRUD transactions, statistics |
+| **Categories** | `/api/categories/*` - CRUD categories |
+
 ### Base URL
 ```
 http://localhost:3000/api
 ```
 
 ### Authentication APIs
+
+Xem chi tiết đầy đủ tại [API_DOCUMENTATION.md](./API_DOCUMENTATION.md)
+
+#### Quick Examples
 
 #### 1. Đăng Ký
 **POST** `/api/auth/register`

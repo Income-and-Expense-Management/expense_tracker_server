@@ -2,13 +2,17 @@ const prisma = require('../config/database');
 
 class UserRepository {
   async findByEmail(email) {
-    return await prisma.user.findUnique({
+    console.log('UserRepository.findByEmail:', email);
+    const result = await prisma.user.findUnique({
       where: { email },
     });
+    console.log('UserRepository.findByEmail result:', result ? result.id : null);
+    return result;
   }
 
   async findById(id) {
-    return await prisma.user.findUnique({
+    console.log('UserRepository.findById:', id);
+    const result = await prisma.user.findUnique({
       where: { id },
       select: {
         id: true,
@@ -19,10 +23,13 @@ class UserRepository {
         created_at: true,
       },
     });
+    console.log('UserRepository.findById result:', result ? result.id : null);
+    return result;
   }
 
   async create(userData) {
-    return await prisma.user.create({
+    console.log('UserRepository.create for:', userData.email);
+    const result = await prisma.user.create({
       data: userData,
       select: {
         id: true,
@@ -33,10 +40,13 @@ class UserRepository {
         created_at: true,
       },
     });
+    console.log('UserRepository.create result id:', result.id);
+    return result;
   }
 
   async update(id, userData) {
-    return await prisma.user.update({
+    console.log('UserRepository.update id:', id, 'payload:', userData);
+    const result = await prisma.user.update({
       where: { id },
       data: userData,
       select: {
@@ -48,12 +58,17 @@ class UserRepository {
         created_at: true,
       },
     });
+    console.log('UserRepository.update result id:', result.id);
+    return result;
   }
 
   async delete(id) {
-    return await prisma.user.delete({
+    console.log('UserRepository.delete id:', id);
+    const result = await prisma.user.delete({
       where: { id },
     });
+    console.log('UserRepository.delete result id:', result ? result.id : null);
+    return result;
   }
 }
 

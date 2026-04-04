@@ -5,14 +5,29 @@ const app = express();
 
 // Import routes
 const authRoutes = require('./routes/authRoutes');
+const walletRoutes = require('./routes/walletRoutes');
+const transactionRoutes = require('./routes/transactionRoutes');
+const categoryRoutes = require('./routes/categoryRoutes');
 
 // Middleware giúp server đọc được dữ liệu JSON từ app Android gửi lên
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Request/response logger (helpful for debugging)
+app.use(require('./middleware/requestLogger'));
+
 // Auth routes
 app.use('/api/auth', authRoutes);
+
+// Wallet routes
+app.use('/api/wallets', walletRoutes);
+
+// Transaction routes
+app.use('/api/transactions', transactionRoutes);
+
+// Category routes
+app.use('/api/categories', categoryRoutes);
 
 // 404 handler
 app.use((req, res) => {

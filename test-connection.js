@@ -1,6 +1,6 @@
 // Kiểm tra kết nối database và Prisma Client
-require('dotenv').config();
-const prisma = require('./config/database');
+import 'dotenv/config';
+import prisma from './config/database.js';
 
 async function testConnection() {
   try {

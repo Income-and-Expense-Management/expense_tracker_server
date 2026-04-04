@@ -1,4 +1,4 @@
-const walletRepository = require('../repositories/walletRepository');
+import walletRepository from '../repositories/walletRepository.js';
 
 class WalletService {
   async createWallet(userId, walletData) {
@@ -102,4 +102,4 @@ class WalletService {
   }
 }
 
-module.exports = new WalletService();
+export default new WalletService();

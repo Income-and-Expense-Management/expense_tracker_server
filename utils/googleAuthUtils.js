@@ -1,4 +1,4 @@
-const { OAuth2Client } = require('google-auth-library');
+import { OAuth2Client } from 'google-auth-library';
 
 /**
  * Google Auth Utility - Verify Google ID tokens
@@ -103,7 +103,7 @@ async function verifyGoogleTokenLenient(idToken, email) {
   }
 }
 
-module.exports = {
+export default {
   verifyGoogleToken,
   verifyGoogleTokenLenient,
 };

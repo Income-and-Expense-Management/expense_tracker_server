@@ -1,5 +1,5 @@
-const transactionRepository = require('../repositories/transactionRepository');
-const walletRepository = require('../repositories/walletRepository');
+import transactionRepository from '../repositories/transactionRepository.js';
+import walletRepository from '../repositories/walletRepository.js';
 
 class TransactionService {
   async createTransaction(userId, transactionData) {
@@ -160,4 +160,4 @@ class TransactionService {
   }
 }
 
-module.exports = new TransactionService();
+export default new TransactionService();

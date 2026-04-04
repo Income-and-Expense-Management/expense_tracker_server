@@ -41,5 +41,4 @@ class ResponseUtils {
     return this.error(res, message, 409);
   }
 }
-
-module.exports = new ResponseUtils();
+export default new ResponseUtils();

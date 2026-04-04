@@ -1,5 +1,5 @@
-const jwtUtils = require('../utils/jwtUtils');
-const responseUtils = require('../utils/responseUtils');
+import jwtUtils from '../utils/jwtUtils.js';
+import responseUtils from '../utils/responseUtils.js';
 
 const authMiddleware = async (req, res, next) => {
   try {
@@ -34,4 +34,4 @@ const authMiddleware = async (req, res, next) => {
   }
 };
 
-module.exports = authMiddleware;
+export default authMiddleware;

@@ -1,7 +1,8 @@
-const express = require('express');
+import express from 'express';
+import transactionController from '../controllers/transactionController.js';
+import authMiddleware from '../middleware/authMiddleware.js';
+
 const router = express.Router();
-const transactionController = require('../controllers/transactionController');
-const authMiddleware = require('../middleware/authMiddleware');
 
 // Tất cả routes đều cần đăng nhập
 router.use(authMiddleware);
@@ -19,4 +20,4 @@ router.get('/wallet/:walletId', transactionController.getTransactionsByWallet);
 // Get statistics for a wallet
 router.get('/wallet/:walletId/statistics', transactionController.getStatistics);
 
-module.exports = router;
+export default router;

@@ -1,7 +1,8 @@
-const express = require('express');
+import express from 'express';
+import categoryController from '../controllers/categoryController.js';
+import authMiddleware from '../middleware/authMiddleware.js';
+
 const router = express.Router();
-const categoryController = require('../controllers/categoryController');
-const authMiddleware = require('../middleware/authMiddleware');
 
 // Tất cả routes đều cần đăng nhập
 router.use(authMiddleware);
@@ -13,4 +14,4 @@ router.get('/:categoryId', categoryController.getCategoryById);
 router.put('/:categoryId', categoryController.updateCategory);
 router.delete('/:categoryId', categoryController.deleteCategory);
 
-module.exports = router;
+export default router;

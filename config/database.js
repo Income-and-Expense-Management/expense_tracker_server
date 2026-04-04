@@ -1,5 +1,5 @@
-require('dotenv').config();
-const { PrismaClient } = require('@prisma/client');
+import 'dotenv/config';
+import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient({});
 
@@ -8,4 +8,4 @@ prisma.$connect()
   .then(() => console.log('✅ Đã kết nối database thành công'))
   .catch((err) => console.error('❌ Lỗi kết nối database:', err));
 
-module.exports = prisma;
+export default prisma;

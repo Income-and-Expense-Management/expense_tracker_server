@@ -1,4 +1,4 @@
-const categoryRepository = require('../repositories/categoryRepository');
+import categoryRepository from '../repositories/categoryRepository.js';
 
 class CategoryService {
   async createCategory(userId, categoryData) {
@@ -81,4 +81,4 @@ class CategoryService {
   }
 }
 
-module.exports = new CategoryService();
+export default new CategoryService();

@@ -1,4 +1,4 @@
-const jwt = require('jsonwebtoken');
+import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-default-secret-key';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
@@ -32,4 +32,4 @@ class JwtUtils {
   }
 }
 
-module.exports = new JwtUtils();
+export default new JwtUtils();

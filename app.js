@@ -6,8 +6,8 @@ import Route from '#routes/index.js';
 import cookieParser from 'cookie-parser';
 import "dotenv/config";
 
+const baseUrl = process.env.BASE_URL || '/api';
 
-const baseUrl = process.env.BASE_URL || '/api/v1';
 const corsOptions = {
   origin: process.env.FRONTEND_URL || 'http://localhost:5173',
   credentials: true
@@ -24,7 +24,7 @@ app.use(helmet({
 app.use(morgan('common'));
 app.use(cookieParser());
 app.use(express.json());
-app.use(cors(corsOptions)); //comment to test with postman
+// app.use(cors(corsOptions)); // Disable CORS for development, enable in production with proper configuration
 app.use(express.urlencoded({ extended: false })); // GIS redirect POST form
 app.set("json replacer", (key, value) =>
   typeof value === "bigint" ? value.toString() : value

@@ -1,5 +1,5 @@
-const { validationResult } = require('express-validator');
-const responseUtils = require('../utils/responseUtils');
+import { validationResult } from 'express-validator';
+import responseUtils from '../utils/responseUtils.js';
 
 const validateRequest = (req, res, next) => {
   const errors = validationResult(req);
@@ -18,4 +18,4 @@ const validateRequest = (req, res, next) => {
   next();
 };
 
-module.exports = validateRequest;
+export default validateRequest;

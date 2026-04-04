@@ -1,20 +1,42 @@
-const bcrypt = require('bcryptjs');
+import bcrypt from 'bcrypt';
+import { logger } from './logger.js';
 
-class PasswordUtils {
-  async hashPassword(password) {
-    console.log('PasswordUtils.hashPassword called');
-    const salt = await bcrypt.genSalt(10);
-    const hashed = await bcrypt.hash(password, salt);
-    console.log('PasswordUtils.hashPassword completed');
-    return hashed;
+const SALT_ROUNDS = 10;
+
+/**
+ * Hash a password using bcrypt
+ * @param {string} password - Plain text password to hash
+ * @returns {Promise<string>} - Hashed password
+ */
+const hashPassword = async (password) => {
+  try {
+    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+    logger.debug('Password hashed successfully');
+    return hashedPassword;
+  } catch (error) {
+    logger.error('Error hashing password', error);
+    throw new Error('Lỗi mã hóa mật khẩu');
   }
+};
 
-  async comparePassword(password, hashedPassword) {
-    console.log('PasswordUtils.comparePassword called');
-    const result = await bcrypt.compare(password, hashedPassword);
-    console.log('PasswordUtils.comparePassword result:', result);
-    return result;
+/**
+ * Compare a plain text password with a hashed password
+ * @param {string} password - Plain text password
+ * @param {string} hashedPassword - Hashed password to compare against
+ * @returns {Promise<boolean>} - True if passwords match
+ */
+const comparePassword = async (password, hashedPassword) => {
+  try {
+    const isMatch = await bcrypt.compare(password, hashedPassword);
+    logger.debug('Password comparison completed', { isMatch });
+    return isMatch;
+  } catch (error) {
+    logger.error('Error comparing password', error);
+    throw new Error('Lỗi xác thực mật khẩu');
   }
-}
+};
 
-module.exports = new PasswordUtils();
+export const passwordUtils = {
+  hashPassword,
+  comparePassword,
+};

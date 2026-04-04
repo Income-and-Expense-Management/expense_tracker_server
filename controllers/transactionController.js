@@ -1,5 +1,5 @@
-const transactionService = require('../services/transactionService');
-const responseUtils = require('../utils/responseUtils');
+import transactionService from '../services/transactionService.js';
+import responseUtils from '../utils/responseUtils.js';
 
 class TransactionController {
   async createTransaction(req, res) {
@@ -190,4 +190,4 @@ class TransactionController {
   }
 }
 
-module.exports = new TransactionController();
+export default new TransactionController();

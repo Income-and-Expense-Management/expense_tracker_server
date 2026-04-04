@@ -1,5 +1,5 @@
-const walletService = require('../services/walletService');
-const responseUtils = require('../utils/responseUtils');
+import walletService from '../services/walletService.js';
+import responseUtils from '../utils/responseUtils.js';
 
 class WalletController {
   async createWallet(req, res) {
@@ -105,4 +105,4 @@ class WalletController {
   }
 }
 
-module.exports = new WalletController();
+export default new WalletController();

@@ -1,5 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+import prisma from '../config/database.js';
 
 class WalletRepository {
   async create(walletData) {
@@ -78,4 +77,4 @@ class WalletRepository {
   }
 }
 
-module.exports = new WalletRepository();
+export default new WalletRepository();

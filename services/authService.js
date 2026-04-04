@@ -1,7 +1,7 @@
-const userRepository = require('../repositories/userRepository');
-const passwordUtils = require('../utils/passwordUtils');
-const jwtUtils = require('../utils/jwtUtils');
-const googleAuthUtils = require('../utils/googleAuthUtils');
+import userRepository from '../repositories/userRepository.js';
+import {passwordUtils} from '../utils/passwordUtils.js';
+import jwtUtils from '../utils/jwtUtils.js';
+import googleAuthUtils from '../utils/googleAuthUtils.js';
 
 class AuthService {
   async register({ email, password, full_name, avatar_url }) {
@@ -212,4 +212,4 @@ class AuthService {
   }
 }
 
-module.exports = new AuthService();
+export default new AuthService();

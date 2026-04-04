@@ -1,5 +1,5 @@
 // Simple request/response logger for debugging
-module.exports = (req, res, next) => {
+export default (req, res, next) => {
   const start = Date.now();
   const { method, originalUrl } = req;
 

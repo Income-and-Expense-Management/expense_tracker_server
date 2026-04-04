@@ -1,5 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+import prisma from '../config/database.js';
 
 class TransactionRepository {
   async create(transactionData) {
@@ -133,4 +132,4 @@ class TransactionRepository {
   }
 }
 
-module.exports = new TransactionRepository();
+export default new TransactionRepository();

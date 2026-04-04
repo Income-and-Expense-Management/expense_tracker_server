@@ -1,5 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+import prisma from '../config/database.js';
 
 class CategoryRepository {
   async create(categoryData) {
@@ -41,4 +40,4 @@ class CategoryRepository {
   }
 }
 
-module.exports = new CategoryRepository();
+export default new CategoryRepository();

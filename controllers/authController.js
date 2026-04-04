@@ -1,5 +1,5 @@
-const authService = require('../services/authService');
-const responseUtils = require('../utils/responseUtils');
+import authService from '../services/authService.js';
+import responseUtils from '../utils/responseUtils.js';
 
 class AuthController {
   async register(req, res) {
@@ -200,4 +200,4 @@ class AuthController {
   }
 }
 
-module.exports = new AuthController();
+export default new AuthController();

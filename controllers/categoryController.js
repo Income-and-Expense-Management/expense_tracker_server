@@ -1,5 +1,5 @@
-const categoryService = require('../services/categoryService');
-const responseUtils = require('../utils/responseUtils');
+import categoryService from '../services/categoryService.js';
+import responseUtils from '../utils/responseUtils.js';
 
 class CategoryController {
   async createCategory(req, res) {
@@ -110,4 +110,4 @@ class CategoryController {
   }
 }
 
-module.exports = new CategoryController();
+export default new CategoryController();

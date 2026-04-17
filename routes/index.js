@@ -6,6 +6,7 @@ import walletRoutes from './walletRoutes.js';
 import transactionRoutes from './transactionRoutes.js';
 import categoryRoutes from './categoryRoutes.js';
 import budgetRoutes from './budgetRoutes.js';
+import syncRoutes from './syncRoutes.js';
 
 const router = express.Router();
 
@@ -31,6 +32,7 @@ v1Router.use('/wallets', walletRoutes);
 v1Router.use('/transactions', transactionRoutes);
 v1Router.use('/categories', categoryRoutes);
 v1Router.use('/budgets', budgetRoutes);
+v1Router.use('/sync', syncRoutes);
 
 // Mount v1 under /v1 prefix
 router.use('/v1', v1Router);

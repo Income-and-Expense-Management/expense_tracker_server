@@ -38,4 +38,8 @@ export const ERROR_MESSAGES = {
   BUDGET_ACCESS_DENIED: 'Bạn không có quyền thực hiện thao tác này với ngân sách',
   BUDGET_UPDATE_DENIED: 'Bạn không có quyền cập nhật ngân sách này',
   BUDGET_DELETE_DENIED: 'Bạn không có quyền xóa ngân sách này',
+
+  // Sync
+  SYNC_INVALID_LAST_SYNC_TIME: 'Giá trị last_sync_time không hợp lệ',
+  SYNC_PUSH_INVALID_PAYLOAD: 'Payload đồng bộ không hợp lệ',
 };

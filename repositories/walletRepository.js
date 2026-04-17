@@ -1,17 +1,17 @@
 import prisma from '../config/database.js';
 
-class WalletRepository {
+const WalletRepository = {
   async create(walletData) {
     return await prisma.wallet.create({
       data: walletData,
     });
-  }
+  },
 
   async findById(id) {
     return await prisma.wallet.findUnique({
       where: { id },
     });
-  }
+  },
 
   async findByUserId(userId) {
     return await prisma.wallet.findMany({
@@ -21,7 +21,7 @@ class WalletRepository {
       },
       orderBy: { created_at: 'desc' },
     });
-  }
+  },
 
   async update(id, walletData) {
     return await prisma.wallet.update({
@@ -31,7 +31,7 @@ class WalletRepository {
         updated_at: new Date(),
       },
     });
-  }
+  },
 
   async softDelete(id) {
     return await prisma.wallet.update({
@@ -41,13 +41,13 @@ class WalletRepository {
         updated_at: new Date(),
       },
     });
-  }
+  },
 
   async delete(id) {
     return await prisma.wallet.delete({
       where: { id },
     });
-  }
+  },
 
   async getWalletBalance(walletId) {
     const wallet = await prisma.wallet.findUnique({
@@ -74,7 +74,7 @@ class WalletRepository {
       ...wallet,
       current_balance: currentBalance.toString(),
     };
-  }
+  },
 }
 
-export default new WalletRepository();
+export default WalletRepository;

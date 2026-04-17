@@ -1,11 +1,11 @@
 import prisma from '../config/database.js';
 
-class TransactionRepository {
+const TransactionRepository = {
   async create(transactionData) {
     return await prisma.transaction.create({
       data: transactionData,
     });
-  }
+  },
 
   async findById(id) {
     return await prisma.transaction.findUnique({
@@ -14,7 +14,7 @@ class TransactionRepository {
         // Nếu cần thêm thông tin category
       },
     });
-  }
+  },
 
   async findByWalletId(walletId, filters = {}) {
     const where = { wallet_id: walletId };
@@ -41,7 +41,7 @@ class TransactionRepository {
       where,
       orderBy: { transaction_date: 'desc' },
     });
-  }
+  },
 
   async findByUserId(userId, filters = {}) {
     const wallets = await prisma.wallet.findMany({
@@ -81,7 +81,7 @@ class TransactionRepository {
       where,
       orderBy: { transaction_date: 'desc' },
     });
-  }
+  },
 
   async update(id, transactionData) {
     return await prisma.transaction.update({
@@ -91,13 +91,13 @@ class TransactionRepository {
         updated_at: new Date(),
       },
     });
-  }
+  },
 
   async delete(id) {
     return await prisma.transaction.delete({
       where: { id },
     });
-  }
+  },
 
   async getStatistics(walletId, startDate, endDate) {
     const where = {
@@ -129,7 +129,7 @@ class TransactionRepository {
       balance: (totalIncome - totalExpense).toString(),
       transaction_count: transactions.length,
     };
-  }
+  },
 }
 
-export default new TransactionRepository();
+export default TransactionRepository;

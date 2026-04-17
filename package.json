@@ -17,7 +17,8 @@
     "#utils/*": "./utils/*",
     "#lib/*": "./lib/*",
     "#routes/*": "./routes/*",
-    "#middleware/*": "./middleware/*"
+    "#middleware/*": "./middleware/*",
+    "#repositories/*": "./repositories/*"
   },
   "keywords": [],
   "author": "",

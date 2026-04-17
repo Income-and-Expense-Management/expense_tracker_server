@@ -1,6 +1,6 @@
 import express from 'express';
 import authController from '../controllers/authController.js';
-import authMiddleware from '../middleware/authMiddleware.js';
+import {authenticateToken} from '../middleware/authenticateToken.js';
 
 const router = express.Router();
 
@@ -10,9 +10,9 @@ router.post('/login', authController.login);
 router.post('/google', authController.loginWithGoogle);
 
 // Protected routes (cần đăng nhập)
-router.post('/logout', authMiddleware, authController.logout);
-router.get('/profile', authMiddleware, authController.getProfile);
-router.put('/profile', authMiddleware, authController.updateProfile);
-router.put('/change-password', authMiddleware, authController.changePassword);
+router.post('/logout', authenticateToken, authController.logout);
+router.get('/profile', authenticateToken, authController.getProfile);
+router.put('/profile', authenticateToken, authController.updateProfile);
+router.put('/change-password', authenticateToken, authController.changePassword);
 
 export default router;

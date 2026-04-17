@@ -1,11 +1,11 @@
 import express from 'express';
 import categoryController from '../controllers/categoryController.js';
-import authMiddleware from '../middleware/authMiddleware.js';
+import { authenticateToken } from '../middleware/authenticateToken.js';
 
 const router = express.Router();
 
 // Tất cả routes đều cần đăng nhập
-router.use(authMiddleware);
+router.use(authenticateToken);
 
 // CRUD operations
 router.post('/', categoryController.createCategory);

@@ -1,14 +1,16 @@
-import walletService from '../services/walletService.js';
-import responseUtils from '../utils/responseUtils.js';
+import { walletService } from '../services/walletService.js';
+import ApiResponse from '../utils/responseUtils.js';
+import { ERROR_MESSAGES } from '../utils/errorMessages.js';
+import { logger } from '../utils/logger.js';
 
-class WalletController {
+const walletController = {
   async createWallet(req, res) {
     try {
       const userId = req.user.userId;
       const { name, initial_balance, currency, icon_id } = req.body;
 
       if (!name) {
-        return responseUtils.badRequest(res, 'Tên ví là bắt buộc');
+        return ApiResponse.badRequest(res, 'Tên ví là bắt buộc');
       }
 
       const wallet = await walletService.createWallet(userId, {
@@ -18,12 +20,12 @@ class WalletController {
         icon_id,
       });
 
-      return responseUtils.created(res, wallet, 'Tạo ví thành công');
+      return ApiResponse.created(res, wallet, 'Tạo ví thành công');
     } catch (error) {
-      console.error('Create wallet error:', error);
-      return responseUtils.error(res, error.message);
+      logger.error('Create wallet error:', error);
+      return ApiResponse.error(res, error.message);
     }
-  }
+  },
 
   async getWalletById(req, res) {
     try {
@@ -32,18 +34,18 @@ class WalletController {
 
       const wallet = await walletService.getWalletById(walletId, userId);
 
-      return responseUtils.success(res, wallet, 'Lấy thông tin ví thành công');
+      return ApiResponse.success(res, wallet, 'Lấy thông tin ví thành công');
     } catch (error) {
-      if (error.message === 'Không tìm thấy ví') {
-        return responseUtils.notFound(res, error.message);
+      if (error.message === ERROR_MESSAGES.WALLET_NOT_FOUND) {
+        return ApiResponse.notFound(res, error.message);
       }
-      if (error.message === 'Bạn không có quyền truy cập ví này') {
-        return responseUtils.forbidden(res, error.message);
+      if (error.message === ERROR_MESSAGES.WALLET_ACCESS_DENIED) {
+        return ApiResponse.forbidden(res, error.message);
       }
-      console.error('Get wallet error:', error);
-      return responseUtils.error(res, error.message);
+      logger.error('Get wallet error:', error);
+      return ApiResponse.error(res, error.message);
     }
-  }
+  },
 
   async getAllWallets(req, res) {
     try {
@@ -51,12 +53,12 @@ class WalletController {
 
       const wallets = await walletService.getAllWallets(userId);
 
-      return responseUtils.success(res, wallets, 'Lấy danh sách ví thành công');
+      return ApiResponse.success(res, wallets, 'Lấy danh sách ví thành công');
     } catch (error) {
-      console.error('Get all wallets error:', error);
-      return responseUtils.error(res, error.message);
+      logger.error('Get all wallets error:', error);
+      return ApiResponse.error(res, error.message);
     }
-  }
+  },
 
   async updateWallet(req, res) {
     try {
@@ -71,18 +73,18 @@ class WalletController {
         icon_id,
       });
 
-      return responseUtils.success(res, wallet, 'Cập nhật ví thành công');
+      return ApiResponse.success(res, wallet, 'Cập nhật ví thành công');
     } catch (error) {
-      if (error.message === 'Không tìm thấy ví') {
-        return responseUtils.notFound(res, error.message);
+      if (error.message === ERROR_MESSAGES.WALLET_NOT_FOUND) {
+        return ApiResponse.notFound(res, error.message);
       }
-      if (error.message === 'Bạn không có quyền cập nhật ví này') {
-        return responseUtils.forbidden(res, error.message);
+      if (error.message === ERROR_MESSAGES.WALLET_UPDATE_DENIED) {
+        return ApiResponse.forbidden(res, error.message);
       }
-      console.error('Update wallet error:', error);
-      return responseUtils.error(res, error.message);
+      logger.error('Update wallet error:', error);
+      return ApiResponse.error(res, error.message);
     }
-  }
+  },
 
   async deleteWallet(req, res) {
     try {
@@ -91,18 +93,18 @@ class WalletController {
 
       const result = await walletService.deleteWallet(walletId, userId);
 
-      return responseUtils.success(res, result, 'Xóa ví thành công');
+      return ApiResponse.success(res, result, 'Xóa ví thành công');
     } catch (error) {
-      if (error.message === 'Không tìm thấy ví') {
-        return responseUtils.notFound(res, error.message);
+      if (error.message === ERROR_MESSAGES.WALLET_NOT_FOUND) {
+        return ApiResponse.notFound(res, error.message);
       }
-      if (error.message === 'Bạn không có quyền xóa ví này') {
-        return responseUtils.forbidden(res, error.message);
+      if (error.message === ERROR_MESSAGES.WALLET_DELETE_DENIED) {
+        return ApiResponse.forbidden(res, error.message);
       }
-      console.error('Delete wallet error:', error);
-      return responseUtils.error(res, error.message);
+      logger.error('Delete wallet error:', error);
+      return ApiResponse.error(res, error.message);
     }
-  }
-}
+  },
+};
 
-export default new WalletController();
+export default walletController;

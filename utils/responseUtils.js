@@ -1,6 +1,8 @@
-class ResponseUtils {
-  success(res, data, message = 'Thành công', statusCode = 200) {
-    console.log('ResponseUtils.success', { statusCode, message });
+/**
+ * Standardized API Response Helper
+ */
+export default class ApiResponse {
+  static success(res, data, message = 'Success', statusCode = 200) {
     return res.status(statusCode).json({
       success: true,
       message,
@@ -8,37 +10,61 @@ class ResponseUtils {
     });
   }
 
-  error(res, message = 'Có lỗi xảy ra', statusCode = 500, errors = null) {
-    console.log('ResponseUtils.error', { statusCode, message, errors });
-    return res.status(statusCode).json({
+  static error(res, message = 'Error', statusCode = 500, errors = null) {
+    const response = {
       success: false,
       message,
-      errors,
-    });
+    };
+
+    if (errors) {
+      response.errors = errors;
+    }
+
+    return res.status(statusCode).json(response);
   }
 
-  created(res, data, message = 'Tạo mới thành công') {
+  static created(res, data, message = 'Created successfully') {
     return this.success(res, data, message, 201);
   }
 
-  badRequest(res, message = 'Dữ liệu không hợp lệ', errors = null) {
+  static badRequest(res, message = 'Bad request', errors = null) {
     return this.error(res, message, 400, errors);
   }
 
-  unauthorized(res, message = 'Không có quyền truy cập') {
+  static unauthorized(res, message = 'Không có quyền truy cập') {
     return this.error(res, message, 401);
   }
 
-  forbidden(res, message = 'Truy cập bị từ chối') {
+  static forbidden(res, message = 'Truy cập bị từ chối') {
     return this.error(res, message, 403);
   }
 
-  notFound(res, message = 'Không tìm thấy') {
+  static notFound(res, message = 'Không tìm thấy') {
     return this.error(res, message, 404);
   }
 
-  conflict(res, message = 'Dữ liệu bị trùng lặp') {
+  static conflict(res, message = 'Conflict') {
     return this.error(res, message, 409);
   }
+
+  static noContent(res, message = 'No content') {
+    return res.status(204).json({
+      success: true,
+      message,
+    });
+  }
+
+  static paginated(res, data, pagination, message = 'Success') {
+    return res.status(200).json({
+      success: true,
+      message,
+      data,
+      pagination: {
+        page: pagination.page,
+        limit: pagination.limit,
+        total: pagination.total,
+        totalPages: Math.ceil(pagination.total / pagination.limit),
+      },
+    });
+  }
 }
-export default new ResponseUtils();

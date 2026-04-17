@@ -1,14 +1,16 @@
-import categoryService from '../services/categoryService.js';
-import responseUtils from '../utils/responseUtils.js';
+import { categoryService } from '../services/categoryService.js';
+import ApiResponse from '../utils/responseUtils.js';
+import { ERROR_MESSAGES } from '../utils/errorMessages.js';
+import { logger } from '../utils/logger.js';
 
-class CategoryController {
+const categoryController = {
   async createCategory(req, res) {
     try {
       const userId = req.user.userId;
       const { name, type, icon_name } = req.body;
 
       if (!name || !type) {
-        return responseUtils.badRequest(res, 'Tên và loại danh mục là bắt buộc');
+        return ApiResponse.badRequest(res, 'Tên và loại danh mục là bắt buộc');
       }
 
       const category = await categoryService.createCategory(userId, {
@@ -17,15 +19,15 @@ class CategoryController {
         icon_name,
       });
 
-      return responseUtils.created(res, category, 'Tạo danh mục thành công');
+      return ApiResponse.created(res, category, 'Tạo danh mục thành công');
     } catch (error) {
-      if (error.message.includes('không hợp lệ')) {
-        return responseUtils.badRequest(res, error.message);
+      if (error.message === ERROR_MESSAGES.INVALID_CATEGORY_TYPE) {
+        return ApiResponse.badRequest(res, error.message);
       }
-      console.error('Create category error:', error);
-      return responseUtils.error(res, error.message);
+      logger.error('Create category error:', error);
+      return ApiResponse.error(res, error.message);
     }
-  }
+  },
 
   async getCategoryById(req, res) {
     try {
@@ -34,18 +36,18 @@ class CategoryController {
 
       const category = await categoryService.getCategoryById(categoryId, userId);
 
-      return responseUtils.success(res, category, 'Lấy thông tin danh mục thành công');
+      return ApiResponse.success(res, category, 'Lấy thông tin danh mục thành công');
     } catch (error) {
-      if (error.message === 'Không tìm thấy danh mục') {
-        return responseUtils.notFound(res, error.message);
+      if (error.message === ERROR_MESSAGES.CATEGORY_NOT_FOUND) {
+        return ApiResponse.notFound(res, error.message);
       }
-      if (error.message.includes('không có quyền')) {
-        return responseUtils.forbidden(res, error.message);
+      if (error.message === ERROR_MESSAGES.CATEGORY_ACCESS_DENIED) {
+        return ApiResponse.forbidden(res, error.message);
       }
-      console.error('Get category error:', error);
-      return responseUtils.error(res, error.message);
+      logger.error('Get category error:', error);
+      return ApiResponse.error(res, error.message);
     }
-  }
+  },
 
   async getAllCategories(req, res) {
     try {
@@ -54,12 +56,12 @@ class CategoryController {
 
       const categories = await categoryService.getAllCategories(userId, type);
 
-      return responseUtils.success(res, categories, 'Lấy danh sách danh mục thành công');
+      return ApiResponse.success(res, categories, 'Lấy danh sách danh mục thành công');
     } catch (error) {
-      console.error('Get all categories error:', error);
-      return responseUtils.error(res, error.message);
+      logger.error('Get all categories error:', error);
+      return ApiResponse.error(res, error.message);
     }
-  }
+  },
 
   async updateCategory(req, res) {
     try {
@@ -73,21 +75,21 @@ class CategoryController {
         icon_name,
       });
 
-      return responseUtils.success(res, category, 'Cập nhật danh mục thành công');
+      return ApiResponse.success(res, category, 'Cập nhật danh mục thành công');
     } catch (error) {
-      if (error.message === 'Không tìm thấy danh mục') {
-        return responseUtils.notFound(res, error.message);
+      if (error.message === ERROR_MESSAGES.CATEGORY_NOT_FOUND) {
+        return ApiResponse.notFound(res, error.message);
       }
-      if (error.message.includes('không có quyền')) {
-        return responseUtils.forbidden(res, error.message);
+      if (error.message === ERROR_MESSAGES.CATEGORY_UPDATE_DENIED) {
+        return ApiResponse.forbidden(res, error.message);
       }
-      if (error.message.includes('không hợp lệ')) {
-        return responseUtils.badRequest(res, error.message);
+      if (error.message === ERROR_MESSAGES.INVALID_CATEGORY_TYPE) {
+        return ApiResponse.badRequest(res, error.message);
       }
-      console.error('Update category error:', error);
-      return responseUtils.error(res, error.message);
+      logger.error('Update category error:', error);
+      return ApiResponse.error(res, error.message);
     }
-  }
+  },
 
   async deleteCategory(req, res) {
     try {
@@ -96,18 +98,18 @@ class CategoryController {
 
       const result = await categoryService.deleteCategory(categoryId, userId);
 
-      return responseUtils.success(res, result, 'Xóa danh mục thành công');
+      return ApiResponse.success(res, result, 'Xóa danh mục thành công');
     } catch (error) {
-      if (error.message === 'Không tìm thấy danh mục') {
-        return responseUtils.notFound(res, error.message);
+      if (error.message === ERROR_MESSAGES.CATEGORY_NOT_FOUND) {
+        return ApiResponse.notFound(res, error.message);
       }
-      if (error.message.includes('không có quyền')) {
-        return responseUtils.forbidden(res, error.message);
+      if (error.message === ERROR_MESSAGES.CATEGORY_DELETE_DENIED) {
+        return ApiResponse.forbidden(res, error.message);
       }
-      console.error('Delete category error:', error);
-      return responseUtils.error(res, error.message);
+      logger.error('Delete category error:', error);
+      return ApiResponse.error(res, error.message);
     }
-  }
-}
+  },
+};
 
-export default new CategoryController();
+export default categoryController;

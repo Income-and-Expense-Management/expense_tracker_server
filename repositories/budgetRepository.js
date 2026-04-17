@@ -1,0 +1,97 @@
+import prisma from '../config/database.js';
+
+const budgetRepository = {
+  async create(budgetData) {
+    return await prisma.budget.create({
+      data: budgetData,
+    });
+  },
+
+  async findById(id) {
+    return await prisma.budget.findUnique({
+      where: { id },
+    });
+  },
+
+  async findByWalletId(walletId, filters = {}) {
+    const where = { wallet_id: walletId };
+
+    if (filters.category_id) {
+      where.category_id = filters.category_id;
+    }
+
+    return await prisma.budget.findMany({
+      where,
+      orderBy: { start_date: 'desc' },
+    });
+  },
+
+  async findByUserId(userId, filters = {}) {
+    // First, get all wallet IDs belonging to this user
+    const wallets = await prisma.wallet.findMany({
+      where: { user_id: userId, is_active: true },
+      select: { id: true },
+    });
+
+    const walletIds = wallets.map((w) => w.id);
+
+    const where = {
+      wallet_id: { in: walletIds },
+    };
+
+    if (filters.wallet_id) {
+      where.wallet_id = filters.wallet_id;
+    }
+
+    if (filters.category_id) {
+      where.category_id = filters.category_id;
+    }
+
+    return await prisma.budget.findMany({
+      where,
+      orderBy: { start_date: 'desc' },
+    });
+  },
+
+  async update(id, budgetData) {
+    return await prisma.budget.update({
+      where: { id },
+      data: budgetData,
+    });
+  },
+
+  async delete(id) {
+    return await prisma.budget.delete({
+      where: { id },
+    });
+  },
+
+  /**
+   * Get total spent (expense transactions) for a budget's wallet + category
+   * within the budget's date range.
+   */
+  async getTotalSpent(walletId, categoryId, startDate, endDate) {
+    const where = {
+      wallet_id: walletId,
+      category_id: categoryId,
+      type: 'expense',
+    };
+
+    if (startDate || endDate) {
+      where.transaction_date = {};
+      if (startDate) where.transaction_date.gte = new Date(startDate);
+      if (endDate) where.transaction_date.lte = new Date(endDate);
+    }
+
+    const transactions = await prisma.transaction.findMany({ where });
+
+    let totalSpent = BigInt(0);
+    transactions.forEach((trans) => {
+      totalSpent += BigInt(trans.amount);
+    });
+
+    return totalSpent;
+  },
+};
+
+export default budgetRepository;

@@ -17,8 +17,8 @@
 **Core business rules encoded in the codebase:**
 - Every resource (wallet, transaction, category, budget) is **owned by a user**. Ownership is verified in the Service layer on every read/write/delete.
 - `amount`, `initial_balance`, and `target_amount` are stored as **SQL Server `BigInt`** (to handle large Vietnamese Dong amounts without floating-point errors). They are serialized to `String` before being sent to the client via a global `json replacer` and explicit `.toString()` calls in services.
-- `type` fields for both `Transaction` and `Category` are enforced enums: **`'income'`** or **`'expense'`** only.
-- Wallets use **soft-delete** (`is_active = false`); all other resources use **hard-delete**.
+- `type` fields for `Category` are enforced enums: **`'income'`** or **`'expense'`** only. `Category` is the **Single Source of Truth** for transaction type and icon — `Transaction` does NOT store `type` or `icon_id` directly.
+- Wallets use **soft-delete** (`deleted_at = timestamp`); Categories use **soft-delete** (`is_active = false` + `deleted_at = timestamp`, for sync support). Transactions and Budgets use **hard-delete**.
 
 ---
 
@@ -448,21 +448,36 @@ logger.error('Error context:', error);           // Errors (always with error ob
 ### Schema Summary
 
 ```
-User           — id (UUID), email (unique), full_name, avatar_url, auth_provider, password, created_at
-Wallet         — id (UUID), user_id (FK→User), name, initial_balance (BigInt), currency, icon_id, created_at, updated_at, is_active
-Category       — id (UUID), user_id (FK→User), name, type ('income'|'expense'), icon_name
-Transaction    — id (UUID), wallet_id (FK→Wallet), category_id (FK→Category, nullable), amount (BigInt), type, transaction_date, icon_id, note, created_at, updated_at
-Budget         — id (UUID), wallet_id (FK→Wallet), category_id (FK→Category), target_amount (BigInt), start_date, end_date
+User           — id (UUID), email (unique), full_name, avatar_url, auth_provider, password, created_at, updated_at
+Wallet         — id (UUID), user_id (FK→User), name, initial_balance (BigInt), currency, icon_id, created_at, updated_at, deleted_at
+Category       — id (UUID), user_id (FK→User), name, type ('income'|'expense'), icon_name, is_active, created_at, updated_at, deleted_at
+Transaction    — id (UUID), wallet_id (FK→Wallet), category_id (FK→Category, nullable), amount (BigInt), transaction_date, note, created_at, updated_at, deleted_at
+Budget         — id (UUID), wallet_id (FK→Wallet), category_id (FK→Category), target_amount (BigInt), start_date, end_date, created_at, updated_at, deleted_at
 ```
 
 **Key data facts:**
 - All primary keys are UUID strings (`@default(uuid())`), `@db.VarChar(36)`.
 - Text fields use `NVarChar` for names/notes (supports Vietnamese Unicode), `VarChar` for IDs/codes.
-- `Transaction` has DB indexes on `wallet_id`, `category_id`, and `transaction_date`.
-- `Wallet.current_balance` is **computed dynamically** (not stored): `initial_balance + SUM(income) - SUM(expense)`. This computation happens in the `walletRepository.getWalletBalance()` method.
-- `Budget.total_spent` and `Budget.remaining` are **computed dynamically** in `budgetRepository.getTotalSpent()`.
+- `Transaction` has DB indexes on `wallet_id`, `category_id`, `transaction_date`, and `updated_at` (sync support).
+- **`Category` is the Single Source of Truth** for transaction type (`'income'`/`'expense'`) and icon. `Transaction` does NOT store `type` or `icon_id` — derive via `transaction.category.type` and `transaction.category.icon_name`.
+- `Wallet.current_balance` is **computed dynamically**: `initial_balance + SUM(income) - SUM(expense)`. Type is determined via `transaction.category.type` with `include: { category: true }` in `walletRepository.getWalletBalance()`.
+- `Budget.total_spent` and `Budget.remaining` are **computed dynamically** in `budgetRepository.getTotalSpent()` using nested Prisma filter `category: { type: 'expense' }`.
 - Default currency is `'VND'`.
 - `auth_provider` values: `'local'` (email+password) or `'google'`.
+- Prisma `@relation` directives are defined on all models to support `include` and nested filters.
+
+### Soft-Delete Strategy
+
+| Model | Soft-Delete Mechanism | Hard-Delete |
+|---|---|---|
+| **Wallet** | `deleted_at = timestamp` via `walletRepository.softDelete()` | Never |
+| **Category** | `is_active = false` + `deleted_at = timestamp` via `categoryRepository.softDelete()` | Never |
+| **Transaction** | `deleted_at` column reserved for future sync support | `transactionRepository.delete()` |
+| **Budget** | `deleted_at` column reserved for future sync support | `budgetRepository.delete()` |
+
+**`Category.is_active` vs `Category.deleted_at`:**
+- `is_active = false` → **Hidden** from UI dropdowns. Transactions still counted in statistics.
+- `deleted_at != null` → **Soft-deleted** for sync. Category fully hidden; existing transactions preserved.
 
 ### Ownership Chain
 
@@ -481,9 +496,9 @@ Ownership for `Transaction` and `Budget` is validated **indirectly** by fetching
 | Method | Repository | Purpose |
 |---|---|---|
 | `findByIdWithPassword(id)` | `userRepository` | Fetches user WITH password hash — only for `changePassword`. Never expose to clients. |
-| `getWalletBalance(walletId)` | `walletRepository` | Computes real-time `current_balance` from transactions |
-| `getTotalSpent(...)` | `budgetRepository` | Computes spent amount for a budget |
-| `getStatistics(walletId, ...)` | `transactionRepository` | Aggregates income/expense stats |
+| `getWalletBalance(walletId)` | `walletRepository` | Computes `current_balance` via `include: { category: true }` on transactions |
+| `getTotalSpent(...)` | `budgetRepository` | Computes spent using nested filter `category: { type: 'expense' }` |
+| `getStatistics(walletId, ...)` | `transactionRepository` | Aggregates income/expense stats via `include: { category: true }` |
 | `checkConnection()` | `healthRepository` | Probes DB connection for the health endpoint |
 
 ---
@@ -524,11 +539,11 @@ These are strict rules an AI must follow when adding or modifying code in this p
 
 15. **Always use the existing `ApiResponse` static methods.** Never call `res.status().json()` directly in a controller.
 
-16. **Always add `updated_at: new Date()`** to repository `update()` calls for `Wallet` and `Transaction` (this is done inside the repository `update` method automatically for wallets; verify for new models).
+16. **Set `updated_at: new Date()`** in repository `update()` calls for `Wallet`, `Transaction`, `Category`, `Budget`, and `User`. This is handled inside each repository's `update()` / `softDelete()` method automatically.
 
-17. **Always apply `router.use(authenticateToken)`** at the top of any new resource route file. Do not apply it per-route unless mixed public/protected routes exist (as in `authRoutes.js`).
+17. **Always use `router.use(authenticateToken)`** at the top of any new resource route file. Do not apply it per-route unless mixed public/protected routes exist (as in `authRoutes.js`).
 
-18. **Always filter `findByUserId` via wallet ownership** for cross-resource queries (e.g., getting all transactions across all of a user's wallets requires first fetching wallet IDs for that user).
+18. **Always filter `findByUserId` via wallet ownership** for cross-resource queries (e.g., getting all transactions across all of a user's wallets requires first fetching wallet IDs for that user). Use `deleted_at: null` when filtering wallets, not `is_active`.
 
 19. **Always create a Zod validator file** in `middleware/validators/` for every new resource domain, and wire it to POST/PATCH routes before the controller handler.
 
@@ -537,6 +552,12 @@ These are strict rules an AI must follow when adding or modifying code in this p
 21. **Always use `PATCH` for partial update routes**, not `PUT`. `PUT` is reserved for full resource replacement.
 
 22. **Always use `healthRepository.checkConnection()`** for the health check — never import Prisma directly in `routes/index.js`.
+
+23. **Always use `include: { category: true }`** when fetching transactions that need type/icon information (balance calculation, statistics, API responses). The linked Category is the Single Source of Truth for `type` and `icon_name`.
+
+24. **Always use Prisma nested filtering** to filter transactions by type: `where: { category: { type: 'expense' } }` — never use `where: { type: 'expense' }` directly on the transaction (field does not exist).
+
+25. **Always use soft-delete for Wallets** (`walletRepository.softDelete(id)`) and **Categories** (`categoryRepository.softDelete(id)`). Use **hard-delete for Transactions and Budgets**.
 
 ### ❌ Never Do
 

@@ -25,7 +25,6 @@ export const walletService = {
       icon_id,
       created_at: new Date(),
       updated_at: new Date(),
-      is_active: true,
     });
 
     return {

@@ -17,7 +17,7 @@ const walletRepository = {
     return await prisma.wallet.findMany({
       where: {
         user_id: userId,
-        is_active: true,
+        deleted_at: null,
       },
       orderBy: { created_at: 'desc' },
     });
@@ -37,7 +37,7 @@ const walletRepository = {
     return await prisma.wallet.update({
       where: { id },
       data: {
-        is_active: false,
+        deleted_at: new Date(),
         updated_at: new Date(),
       },
     });
@@ -51,7 +51,9 @@ const walletRepository = {
 
   /**
    * Compute the real-time balance of a wallet.
-   * Returns the wallet row augmented with a computed `current_balance` string.
+   * Balance = initial_balance + SUM(income transactions) - SUM(expense transactions).
+   * Transaction type is inferred from its linked Category.type.
+   * Transactions without a category (category_id = null) are excluded from the calculation.
    * @param {string} walletId
    * @returns {Promise<Object|null>} wallet + current_balance (String), or null if not found.
    */
@@ -64,14 +66,16 @@ const walletRepository = {
 
     const transactions = await prisma.transaction.findMany({
       where: { wallet_id: walletId },
+      include: { category: true },
     });
 
     let currentBalance = BigInt(wallet.initial_balance || 0);
 
     transactions.forEach((trans) => {
-      if (trans.type === 'income') {
+      const categoryType = trans.category?.type;
+      if (categoryType === 'income') {
         currentBalance += BigInt(trans.amount);
-      } else if (trans.type === 'expense') {
+      } else if (categoryType === 'expense') {
         currentBalance -= BigInt(trans.amount);
       }
     });

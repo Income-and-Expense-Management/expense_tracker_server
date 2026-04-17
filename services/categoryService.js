@@ -108,7 +108,9 @@ export const categoryService = {
   },
 
   /**
-   * Delete a category with ownership check.
+   * Soft-delete a category with ownership check.
+   * Sets is_active=false and deleted_at for sync support.
+   * Existing transactions linked to this category are preserved for historical reporting.
    * @param {string} categoryId - Category ID
    * @param {string} userId - Requesting user ID
    * @returns {Promise<{message: string}>}
@@ -127,7 +129,7 @@ export const categoryService = {
       throw new Error(ERROR_MESSAGES.CATEGORY_DELETE_DENIED);
     }
 
-    await categoryRepository.delete(categoryId);
+    await categoryRepository.softDelete(categoryId);
 
     return { message: 'Xóa danh mục thành công' };
   },

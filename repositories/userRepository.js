@@ -64,7 +64,10 @@ const userRepository = {
     logger.debug('UserRepository.update id:', id);
     const result = await prisma.user.update({
       where: { id },
-      data: userData,
+      data: {
+        ...userData,
+        updated_at: new Date(),
+      },
       select: {
         id: true,
         full_name: true,
@@ -72,6 +75,7 @@ const userRepository = {
         avatar_url: true,
         auth_provider: true,
         created_at: true,
+        updated_at: true,
       },
     });
     logger.debug('UserRepository.update result id:', result.id);

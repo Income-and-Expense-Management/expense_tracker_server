@@ -4,20 +4,23 @@ const transactionRepository = {
   async create(transactionData) {
     return await prisma.transaction.create({
       data: transactionData,
+      include: { category: true },
     });
   },
 
   async findById(id) {
     return await prisma.transaction.findUnique({
       where: { id },
+      include: { category: true },
     });
   },
 
   async findByWalletId(walletId, filters = {}) {
     const where = { wallet_id: walletId };
 
+    // Filter by type via the linked category (Single Source of Truth)
     if (filters.type) {
-      where.type = filters.type;
+      where.category = { type: filters.type };
     }
 
     if (filters.category_id) {
@@ -36,13 +39,15 @@ const transactionRepository = {
 
     return await prisma.transaction.findMany({
       where,
+      include: { category: true },
       orderBy: { transaction_date: 'desc' },
     });
   },
 
   async findByUserId(userId, filters = {}) {
+    // Fetch only non-deleted wallet IDs belonging to this user
     const wallets = await prisma.wallet.findMany({
-      where: { user_id: userId, is_active: true },
+      where: { user_id: userId, deleted_at: null },
       select: { id: true },
     });
 
@@ -52,8 +57,9 @@ const transactionRepository = {
       wallet_id: { in: walletIds },
     };
 
+    // Filter by type via the linked category (Single Source of Truth)
     if (filters.type) {
-      where.type = filters.type;
+      where.category = { type: filters.type };
     }
 
     if (filters.category_id) {
@@ -76,6 +82,7 @@ const transactionRepository = {
 
     return await prisma.transaction.findMany({
       where,
+      include: { category: true },
       orderBy: { transaction_date: 'desc' },
     });
   },
@@ -87,6 +94,7 @@ const transactionRepository = {
         ...transactionData,
         updated_at: new Date(),
       },
+      include: { category: true },
     });
   },
 
@@ -98,6 +106,9 @@ const transactionRepository = {
 
   /**
    * Compute income/expense statistics for a wallet within an optional date range.
+   * Transaction type (income/expense) is derived from the linked Category.type.
+   * Transactions without a category are counted in transaction_count but excluded
+   * from income/expense totals.
    * @param {string} walletId
    * @param {string|null} [startDate] - ISO date string
    * @param {string|null} [endDate] - ISO date string
@@ -114,15 +125,19 @@ const transactionRepository = {
       if (endDate) where.transaction_date.lte = new Date(endDate);
     }
 
-    const transactions = await prisma.transaction.findMany({ where });
+    const transactions = await prisma.transaction.findMany({
+      where,
+      include: { category: true },
+    });
 
     let totalIncome = BigInt(0);
     let totalExpense = BigInt(0);
 
     transactions.forEach((trans) => {
-      if (trans.type === 'income') {
+      const categoryType = trans.category?.type;
+      if (categoryType === 'income') {
         totalIncome += BigInt(trans.amount);
-      } else if (trans.type === 'expense') {
+      } else if (categoryType === 'expense') {
         totalExpense += BigInt(trans.amount);
       }
     });

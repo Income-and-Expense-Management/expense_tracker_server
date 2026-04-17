@@ -27,9 +27,9 @@ const budgetRepository = {
   },
 
   async findByUserId(userId, filters = {}) {
-    // First, get all wallet IDs belonging to this user
+    // Fetch only non-deleted wallet IDs belonging to this user
     const wallets = await prisma.wallet.findMany({
-      where: { user_id: userId, is_active: true },
+      where: { user_id: userId, deleted_at: null },
       select: { id: true },
     });
 
@@ -56,7 +56,10 @@ const budgetRepository = {
   async update(id, budgetData) {
     return await prisma.budget.update({
       where: { id },
-      data: budgetData,
+      data: {
+        ...budgetData,
+        updated_at: new Date(),
+      },
     });
   },
 
@@ -69,12 +72,20 @@ const budgetRepository = {
   /**
    * Get total spent (expense transactions) for a budget's wallet + category
    * within the budget's date range.
+   * Uses nested Prisma filtering on category.type to identify expense transactions,
+   * since Transaction no longer has a direct `type` field.
+   * @param {string} walletId
+   * @param {string} categoryId
+   * @param {Date|null} startDate
+   * @param {Date|null} endDate
+   * @returns {Promise<BigInt>}
    */
   async getTotalSpent(walletId, categoryId, startDate, endDate) {
     const where = {
       wallet_id: walletId,
       category_id: categoryId,
-      type: 'expense',
+      // Determine expense type via the linked Category (Single Source of Truth)
+      category: { type: 'expense' },
     };
 
     if (startDate || endDate) {

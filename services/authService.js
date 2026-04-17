@@ -143,8 +143,8 @@ export const authService = {
    */
   async changePassword(userId, { oldPassword, newPassword }) {
     logger.info('AuthService.changePassword for userId:', userId);
-    const userById = await userRepository.findById(userId);
-    const user = await userRepository.findByEmail(userById.email);
+    // Use findByIdWithPassword to fetch the password hash in a single query
+    const user = await userRepository.findByIdWithPassword(userId);
     logger.debug('AuthService.changePassword found user:', user ? user.id : null);
 
     // Kiểm tra mật khẩu cũ (do NOT log plaintext passwords)

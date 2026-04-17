@@ -3,19 +3,18 @@ import ApiResponse from '../utils/responseUtils.js';
 import { ERROR_MESSAGES } from '../utils/errorMessages.js';
 import { logger } from '../utils/logger.js';
 
+/**
+ * Budget controller — thin HTTP adapter.
+ * All field validation is handled by budgetValidators.js middleware upstream.
+ */
 const budgetController = {
+  /**
+   * POST /budgets
+   */
   async createBudget(req, res) {
     try {
       const userId = req.user.userId;
       const { wallet_id, category_id, target_amount, start_date, end_date } = req.body;
-
-      if (!wallet_id || !category_id || !target_amount) {
-        return ApiResponse.badRequest(res, 'Ví, danh mục và số tiền mục tiêu là bắt buộc');
-      }
-
-      if (target_amount <= 0) {
-        return ApiResponse.badRequest(res, 'Số tiền mục tiêu phải lớn hơn 0');
-      }
 
       const budget = await budgetService.createBudget(userId, {
         wallet_id,
@@ -38,6 +37,9 @@ const budgetController = {
     }
   },
 
+  /**
+   * GET /budgets
+   */
   async getAllBudgets(req, res) {
     try {
       const userId = req.user.userId;
@@ -56,6 +58,9 @@ const budgetController = {
     }
   },
 
+  /**
+   * GET /budgets/:budgetId
+   */
   async getBudgetById(req, res) {
     try {
       const userId = req.user.userId;
@@ -76,15 +81,14 @@ const budgetController = {
     }
   },
 
+  /**
+   * PATCH /budgets/:budgetId
+   */
   async updateBudget(req, res) {
     try {
       const userId = req.user.userId;
       const { budgetId } = req.params;
       const { category_id, target_amount, start_date, end_date } = req.body;
-
-      if (target_amount !== undefined && target_amount <= 0) {
-        return ApiResponse.badRequest(res, 'Số tiền mục tiêu phải lớn hơn 0');
-      }
 
       const budget = await budgetService.updateBudget(budgetId, userId, {
         category_id,
@@ -106,14 +110,18 @@ const budgetController = {
     }
   },
 
+  /**
+   * DELETE /budgets/:budgetId
+   * Returns 204 No Content on success (REST §3).
+   */
   async deleteBudget(req, res) {
     try {
       const userId = req.user.userId;
       const { budgetId } = req.params;
 
-      const result = await budgetService.deleteBudget(budgetId, userId);
+      await budgetService.deleteBudget(budgetId, userId);
 
-      return ApiResponse.success(res, result, 'Xóa ngân sách thành công');
+      return ApiResponse.noContent(res);
     } catch (error) {
       if (error.message === ERROR_MESSAGES.BUDGET_NOT_FOUND) {
         return ApiResponse.notFound(res, error.message);

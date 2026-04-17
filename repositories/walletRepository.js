@@ -1,6 +1,6 @@
 import prisma from '../config/database.js';
 
-const WalletRepository = {
+const walletRepository = {
   async create(walletData) {
     return await prisma.wallet.create({
       data: walletData,
@@ -15,9 +15,9 @@ const WalletRepository = {
 
   async findByUserId(userId) {
     return await prisma.wallet.findMany({
-      where: { 
+      where: {
         user_id: userId,
-        is_active: true
+        is_active: true,
       },
       orderBy: { created_at: 'desc' },
     });
@@ -36,7 +36,7 @@ const WalletRepository = {
   async softDelete(id) {
     return await prisma.wallet.update({
       where: { id },
-      data: { 
+      data: {
         is_active: false,
         updated_at: new Date(),
       },
@@ -49,6 +49,12 @@ const WalletRepository = {
     });
   },
 
+  /**
+   * Compute the real-time balance of a wallet.
+   * Returns the wallet row augmented with a computed `current_balance` string.
+   * @param {string} walletId
+   * @returns {Promise<Object|null>} wallet + current_balance (String), or null if not found.
+   */
   async getWalletBalance(walletId) {
     const wallet = await prisma.wallet.findUnique({
       where: { id: walletId },
@@ -75,6 +81,6 @@ const WalletRepository = {
       current_balance: currentBalance.toString(),
     };
   },
-}
+};
 
-export default WalletRepository;
+export default walletRepository;

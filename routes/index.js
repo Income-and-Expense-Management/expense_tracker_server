@@ -1,6 +1,6 @@
 import express from 'express';
-import prisma from '../config/database.js';
 import ApiResponse from '../utils/responseUtils.js';
+import healthRepository from '../repositories/healthRepository.js';
 import authRoutes from './authRoutes.js';
 import walletRoutes from './walletRoutes.js';
 import transactionRoutes from './transactionRoutes.js';
@@ -10,21 +10,16 @@ import budgetRoutes from './budgetRoutes.js';
 const router = express.Router();
 
 // Health check endpoint (public, no auth required)
+// Uses healthRepository to comply with Rule 7.1 — Prisma only in repositories.
 router.get('/health', async (req, res) => {
-  let dbStatus = 'disconnected';
-  try {
-    await prisma.$queryRaw`SELECT 1`;
-    dbStatus = 'connected';
-  } catch {
-    dbStatus = 'disconnected';
-  }
+  const isConnected = await healthRepository.checkConnection();
 
   return ApiResponse.success(res, {
     service: 'QLCT API',
     version: '1.0.0',
-    status: dbStatus === 'connected' ? 'healthy' : 'degraded',
+    status: isConnected ? 'healthy' : 'degraded',
     timestamp: new Date().toISOString(),
-    database: dbStatus,
+    database: isConnected ? 'connected' : 'disconnected',
   }, 'Service is running normally');
 });
 

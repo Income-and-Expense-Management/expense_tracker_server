@@ -1,23 +1,23 @@
 import express from 'express';
 import transactionController from '../controllers/transactionController.js';
 import { authenticateToken } from '../middleware/authenticateToken.js';
+import {
+  validateCreateTransaction,
+  validateUpdateTransaction,
+} from '../middleware/validators/transactionValidators.js';
 
 const router = express.Router();
 
-// Tất cả routes đều cần đăng nhập
+// All transaction routes require authentication
 router.use(authenticateToken);
 
-// CRUD operations
-router.post('/', transactionController.createTransaction);
-router.get('/', transactionController.getAllTransactions);
-router.get('/:transactionId', transactionController.getTransactionById);
-router.put('/:transactionId', transactionController.updateTransaction);
-router.delete('/:transactionId', transactionController.deleteTransaction);
-
-// Get transactions by wallet
-router.get('/wallet/:walletId', transactionController.getTransactionsByWallet);
-
-// Get statistics for a wallet
-router.get('/wallet/:walletId/statistics', transactionController.getStatistics);
+// Transaction CRUD (flat resource — user-wide)
+// NOTE: wallet-scoped transaction endpoints live under /wallets/:walletId/transactions
+//       (see walletRoutes.js) to enforce proper REST nesting.
+router.post('/',                validateCreateTransaction,  transactionController.createTransaction);
+router.get('/',                                             transactionController.getAllTransactions);
+router.get('/:transactionId',                               transactionController.getTransactionById);
+router.patch('/:transactionId', validateUpdateTransaction,  transactionController.updateTransaction);
+router.delete('/:transactionId',                            transactionController.deleteTransaction);
 
 export default router;

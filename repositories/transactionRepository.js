@@ -1,6 +1,6 @@
 import prisma from '../config/database.js';
 
-const TransactionRepository = {
+const transactionRepository = {
   async create(transactionData) {
     return await prisma.transaction.create({
       data: transactionData,
@@ -10,9 +10,6 @@ const TransactionRepository = {
   async findById(id) {
     return await prisma.transaction.findUnique({
       where: { id },
-      include: {
-        // Nếu cần thêm thông tin category
-      },
     });
   },
 
@@ -99,6 +96,13 @@ const TransactionRepository = {
     });
   },
 
+  /**
+   * Compute income/expense statistics for a wallet within an optional date range.
+   * @param {string} walletId
+   * @param {string|null} [startDate] - ISO date string
+   * @param {string|null} [endDate] - ISO date string
+   * @returns {Promise<{total_income: string, total_expense: string, balance: string, transaction_count: number}>}
+   */
   async getStatistics(walletId, startDate, endDate) {
     const where = {
       wallet_id: walletId,
@@ -130,6 +134,6 @@ const TransactionRepository = {
       transaction_count: transactions.length,
     };
   },
-}
+};
 
-export default TransactionRepository;
+export default transactionRepository;

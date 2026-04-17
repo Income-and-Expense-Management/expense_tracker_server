@@ -1,6 +1,6 @@
 import prisma from '../config/database.js';
 
-const CategoryRepository = {
+const categoryRepository = {
   async create(categoryData) {
     return await prisma.category.create({
       data: categoryData,
@@ -15,7 +15,7 @@ const CategoryRepository = {
 
   async findByUserId(userId, type = null) {
     const where = { user_id: userId };
-    
+
     if (type) {
       where.type = type;
     }
@@ -38,6 +38,6 @@ const CategoryRepository = {
       where: { id },
     });
   },
-}
+};
 
-export default CategoryRepository;
+export default categoryRepository;

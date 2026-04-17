@@ -3,21 +3,20 @@ import ApiResponse from '../utils/responseUtils.js';
 import { ERROR_MESSAGES } from '../utils/errorMessages.js';
 import { logger } from '../utils/logger.js';
 
+/**
+ * Category controller — thin HTTP adapter.
+ * All field validation is handled by categoryValidators.js middleware upstream.
+ */
 const categoryController = {
+  /**
+   * POST /categories
+   */
   async createCategory(req, res) {
     try {
       const userId = req.user.userId;
       const { name, type, icon_name } = req.body;
 
-      if (!name || !type) {
-        return ApiResponse.badRequest(res, 'Tên và loại danh mục là bắt buộc');
-      }
-
-      const category = await categoryService.createCategory(userId, {
-        name,
-        type,
-        icon_name,
-      });
+      const category = await categoryService.createCategory(userId, { name, type, icon_name });
 
       return ApiResponse.created(res, category, 'Tạo danh mục thành công');
     } catch (error) {
@@ -29,6 +28,9 @@ const categoryController = {
     }
   },
 
+  /**
+   * GET /categories/:categoryId
+   */
   async getCategoryById(req, res) {
     try {
       const userId = req.user.userId;
@@ -49,6 +51,9 @@ const categoryController = {
     }
   },
 
+  /**
+   * GET /categories
+   */
   async getAllCategories(req, res) {
     try {
       const userId = req.user.userId;
@@ -63,6 +68,9 @@ const categoryController = {
     }
   },
 
+  /**
+   * PATCH /categories/:categoryId
+   */
   async updateCategory(req, res) {
     try {
       const userId = req.user.userId;
@@ -91,14 +99,18 @@ const categoryController = {
     }
   },
 
+  /**
+   * DELETE /categories/:categoryId
+   * Returns 204 No Content on success (REST §3).
+   */
   async deleteCategory(req, res) {
     try {
       const userId = req.user.userId;
       const { categoryId } = req.params;
 
-      const result = await categoryService.deleteCategory(categoryId, userId);
+      await categoryService.deleteCategory(categoryId, userId);
 
-      return ApiResponse.success(res, result, 'Xóa danh mục thành công');
+      return ApiResponse.noContent(res);
     } catch (error) {
       if (error.message === ERROR_MESSAGES.CATEGORY_NOT_FOUND) {
         return ApiResponse.notFound(res, error.message);

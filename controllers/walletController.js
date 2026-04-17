@@ -3,15 +3,19 @@ import ApiResponse from '../utils/responseUtils.js';
 import { ERROR_MESSAGES } from '../utils/errorMessages.js';
 import { logger } from '../utils/logger.js';
 
+/**
+ * Wallet controller — thin HTTP adapter.
+ * All field validation is handled by walletValidators.js middleware upstream.
+ * Nested /wallets/:walletId/transactions routes are handled by transactionController.js.
+ */
 const walletController = {
+  /**
+   * POST /wallets
+   */
   async createWallet(req, res) {
     try {
       const userId = req.user.userId;
       const { name, initial_balance, currency, icon_id } = req.body;
-
-      if (!name) {
-        return ApiResponse.badRequest(res, 'Tên ví là bắt buộc');
-      }
 
       const wallet = await walletService.createWallet(userId, {
         name,
@@ -27,6 +31,9 @@ const walletController = {
     }
   },
 
+  /**
+   * GET /wallets/:walletId
+   */
   async getWalletById(req, res) {
     try {
       const userId = req.user.userId;
@@ -47,6 +54,9 @@ const walletController = {
     }
   },
 
+  /**
+   * GET /wallets
+   */
   async getAllWallets(req, res) {
     try {
       const userId = req.user.userId;
@@ -60,6 +70,9 @@ const walletController = {
     }
   },
 
+  /**
+   * PATCH /wallets/:walletId
+   */
   async updateWallet(req, res) {
     try {
       const userId = req.user.userId;
@@ -86,14 +99,18 @@ const walletController = {
     }
   },
 
+  /**
+   * DELETE /wallets/:walletId
+   * Returns 204 No Content on success (REST §3).
+   */
   async deleteWallet(req, res) {
     try {
       const userId = req.user.userId;
       const { walletId } = req.params;
 
-      const result = await walletService.deleteWallet(walletId, userId);
+      await walletService.deleteWallet(walletId, userId);
 
-      return ApiResponse.success(res, result, 'Xóa ví thành công');
+      return ApiResponse.noContent(res);
     } catch (error) {
       if (error.message === ERROR_MESSAGES.WALLET_NOT_FOUND) {
         return ApiResponse.notFound(res, error.message);

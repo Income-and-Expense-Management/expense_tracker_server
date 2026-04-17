@@ -28,6 +28,21 @@ const userRepository = {
     return result;
   },
 
+  /**
+   * Fetch a user by ID **including** the hashed password field.
+   * Only for internal auth operations (changePassword). Never expose to clients.
+   * @param {string} id
+   * @returns {Promise<Object|null>}
+   */
+  async findByIdWithPassword(id) {
+    logger.debug('UserRepository.findByIdWithPassword:', id);
+    const result = await prisma.user.findUnique({
+      where: { id },
+    });
+    logger.debug('UserRepository.findByIdWithPassword result:', result ? result.id : null);
+    return result;
+  },
+
   async create(userData) {
     logger.info('UserRepository.create for:', userData.email);
     const result = await prisma.user.create({

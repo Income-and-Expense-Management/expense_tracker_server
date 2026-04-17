@@ -1,186 +1,143 @@
-const authService = require('../services/authService');
-const responseUtils = require('../utils/responseUtils');
+import { authService } from '../services/authService.js';
+import ApiResponse from '../utils/responseUtils.js';
+import { ERROR_MESSAGES } from '../utils/errorMessages.js';
+import { logger } from '../utils/logger.js';
 
-class AuthController {
+/**
+ * Auth controller — thin HTTP adapter.
+ * All input validation is handled by authValidators.js middleware upstream.
+ * All business logic lives in authService.js.
+ */
+const authController = {
+  /**
+   * POST /auth/register
+   */
   async register(req, res) {
     try {
       const { email, password, full_name, avatar_url } = req.body;
-      console.log('Register request body:', req.body);
-      // Validate input
-      if (!email || !password) {
-        return responseUtils.badRequest(res, 'Email và mật khẩu là bắt buộc');
-      }
+      logger.info('Register request for:', email);
 
-      // Validate email format
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        return responseUtils.badRequest(res, 'Email không hợp lệ');
-      }
+      const result = await authService.register({ email, password, full_name, avatar_url });
 
-      // Validate password length
-      if (password.length < 6) {
-        return responseUtils.badRequest(res, 'Mật khẩu phải có ít nhất 6 ký tự');
-      }
-
-      const result = await authService.register({
-        email,
-        password,
-        full_name,
-        avatar_url,
-      });
-
-      return responseUtils.created(res, result, 'Đăng ký thành công');
+      return ApiResponse.created(res, result, 'Đăng ký thành công');
     } catch (error) {
-      if (error.message === 'Email đã được sử dụng') {
-        return responseUtils.conflict(res, error.message);
+      if (error.message === ERROR_MESSAGES.EMAIL_ALREADY_EXISTS) {
+        return ApiResponse.conflict(res, error.message);
       }
-      console.error('Register error:', error);
-      return responseUtils.error(res, error.message);
+      logger.error('Register error:', error);
+      return ApiResponse.error(res, error.message);
     }
-  }
+  },
 
+  /**
+   * POST /auth/login
+   */
   async login(req, res) {
     try {
       const { email, password } = req.body;
-      console.log('Login request for:', email);
-
-      // Validate input
-      if (!email || !password) {
-        return responseUtils.badRequest(res, 'Email và mật khẩu là bắt buộc');
-      }
+      logger.info('Login request for:', email);
 
       const result = await authService.login({ email, password });
-      console.log('Login result:', result);
-      return responseUtils.success(res, result, 'Đăng nhập thành công');
+      logger.info('Login successful for userId:', result.user.id);
+      return ApiResponse.success(res, result, 'Đăng nhập thành công');
     } catch (error) {
       if (
-        error.message === 'Email hoặc mật khẩu không đúng' ||
-        error.message === 'Tài khoản này sử dụng phương thức đăng nhập khác'
+        error.message === ERROR_MESSAGES.INVALID_CREDENTIALS ||
+        error.message === ERROR_MESSAGES.WRONG_AUTH_PROVIDER
       ) {
-        return responseUtils.unauthorized(res, error.message);
+        return ApiResponse.unauthorized(res, error.message);
       }
-      console.error('Login error:', error);
-      return responseUtils.error(res, error.message);
+      logger.error('Login error:', error);
+      return ApiResponse.error(res, error.message);
     }
-  }
+  },
 
+  /**
+   * POST /auth/logout
+   */
   async logout(req, res) {
     try {
-      // Với JWT, logout chủ yếu xử lý ở phía client (xóa token)
-      // Server có thể implement blacklist nếu cần
-      console.log('Logout request, user:', req.user || null);
-      return responseUtils.success(res, null, 'Đăng xuất thành công');
+      // JWT is stateless — logout is client-side token removal.
+      // Server-side blacklisting can be added here if required.
+      logger.info('Logout request, userId:', req.user ? req.user.userId : null);
+      return ApiResponse.success(res, null, 'Đăng xuất thành công');
     } catch (error) {
-      console.error('Logout error:', error);
-      return responseUtils.error(res, error.message);
+      logger.error('Logout error:', error);
+      return ApiResponse.error(res, error.message);
     }
-  }
+  },
 
+  /**
+   * GET /auth/profile
+   */
   async getProfile(req, res) {
     try {
       const userId = req.user.userId;
-      console.log('GetProfile for userId:', userId);
+      logger.info('GetProfile for userId:', userId);
+
       const user = await authService.getProfile(userId);
 
-      return responseUtils.success(res, user, 'Lấy thông tin thành công');
+      return ApiResponse.success(res, user, 'Lấy thông tin thành công');
     } catch (error) {
-      if (error.message === 'Không tìm thấy người dùng') {
-        return responseUtils.notFound(res, error.message);
+      if (error.message === ERROR_MESSAGES.USER_NOT_FOUND) {
+        return ApiResponse.notFound(res, error.message);
       }
-      console.error('Get profile error:', error);
-      return responseUtils.error(res, error.message);
+      logger.error('Get profile error:', error);
+      return ApiResponse.error(res, error.message);
     }
-  }
+  },
 
+  /**
+   * PATCH /auth/profile
+   */
   async updateProfile(req, res) {
     try {
       const userId = req.user.userId;
-      console.log('UpdateProfile for userId:', userId, 'payload:', req.body);
+      logger.info('UpdateProfile for userId:', userId);
+
       const { full_name, avatar_url } = req.body;
 
-      const user = await authService.updateProfile(userId, {
-        full_name,
-        avatar_url,
-      });
+      const user = await authService.updateProfile(userId, { full_name, avatar_url });
 
-      return responseUtils.success(res, user, 'Cập nhật thông tin thành công');
+      return ApiResponse.success(res, user, 'Cập nhật thông tin thành công');
     } catch (error) {
-      console.error('Update profile error:', error);
-      return responseUtils.error(res, error.message);
+      if (error.message === ERROR_MESSAGES.USER_NOT_FOUND) {
+        return ApiResponse.notFound(res, error.message);
+      }
+      logger.error('Update profile error:', error);
+      return ApiResponse.error(res, error.message);
     }
-  }
+  },
 
+  /**
+   * PATCH /auth/change-password
+   */
   async changePassword(req, res) {
     try {
       const userId = req.user.userId;
-      console.log('ChangePassword requested for userId:', userId);
+      logger.info('ChangePassword requested for userId:', userId);
+
       const { oldPassword, newPassword } = req.body;
 
-      // Validate input
-      if (!oldPassword || !newPassword) {
-        return responseUtils.badRequest(res, 'Mật khẩu cũ và mật khẩu mới là bắt buộc');
-      }
+      const result = await authService.changePassword(userId, { oldPassword, newPassword });
 
-      if (newPassword.length < 6) {
-        return responseUtils.badRequest(res, 'Mật khẩu mới phải có ít nhất 6 ký tự');
-      }
-
-      const result = await authService.changePassword(userId, {
-        oldPassword,
-        newPassword,
-      });
-
-      return responseUtils.success(res, result, 'Đổi mật khẩu thành công');
+      return ApiResponse.success(res, result, 'Đổi mật khẩu thành công');
     } catch (error) {
-      if (error.message === 'Mật khẩu cũ không đúng') {
-        return responseUtils.badRequest(res, error.message);
+      if (error.message === ERROR_MESSAGES.WRONG_OLD_PASSWORD) {
+        return ApiResponse.badRequest(res, error.message);
       }
-      console.error('Change password error:', error);
-      return responseUtils.error(res, error.message);
+      logger.error('Change password error:', error);
+      return ApiResponse.error(res, error.message);
     }
-  }
+  },
 
   /**
-   * Login with Google
-   * 
-   * Endpoint: POST /api/auth/google
-   * 
-   * Request body from Android app:
-   * {
-   *   "id_token": "Google ID token from Credential Manager",
-   *   "full_name": "Display name from Google",
-   *   "email": "user@gmail.com"
-   * }
-   * 
-   * Response:
-   * {
-   *   "success": true,
-   *   "message": "Đăng nhập Google thành công",
-   *   "data": {
-   *     "token": "JWT token",
-   *     "user": { "id", "email", "full_name", "avatar_url", ... }
-   *   }
-   * }
+   * POST /auth/google
    */
   async loginWithGoogle(req, res) {
     try {
       const { id_token, full_name, email } = req.body;
-      console.log('Google login request for email:', email);
-
-      // Validate input
-      if (!id_token) {
-        return responseUtils.badRequest(res, 'Google ID token là bắt buộc');
-      }
-
-      if (!email) {
-        return responseUtils.badRequest(res, 'Email là bắt buộc');
-      }
-
-      // Validate email format
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        return responseUtils.badRequest(res, 'Email không hợp lệ');
-      }
+      logger.info('Google login request for email:', email);
 
       const result = await authService.loginWithGoogle({
         idToken: id_token,
@@ -188,16 +145,16 @@ class AuthController {
         email,
       });
 
-      console.log('Google login successful for:', result.user.email);
-      return responseUtils.success(res, result, 'Đăng nhập Google thành công');
+      logger.info('Google login successful for:', result.user.email);
+      return ApiResponse.success(res, result, 'Đăng nhập Google thành công');
     } catch (error) {
-      if (error.message.includes('Google token')) {
-        return responseUtils.unauthorized(res, error.message);
+      if (error.message === ERROR_MESSAGES.INVALID_GOOGLE_TOKEN) {
+        return ApiResponse.unauthorized(res, error.message);
       }
-      console.error('Google login error:', error);
-      return responseUtils.error(res, error.message);
+      logger.error('Google login error:', error);
+      return ApiResponse.error(res, error.message);
     }
-  }
-}
+  },
+};
 
-module.exports = new AuthController();
+export default authController;

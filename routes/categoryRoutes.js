@@ -1,16 +1,21 @@
-const express = require('express');
+import express from 'express';
+import categoryController from '../controllers/categoryController.js';
+import { authenticateToken } from '../middleware/authenticateToken.js';
+import {
+  validateCreateCategory,
+  validateUpdateCategory,
+} from '../middleware/validators/categoryValidators.js';
+
 const router = express.Router();
-const categoryController = require('../controllers/categoryController');
-const authMiddleware = require('../middleware/authMiddleware');
 
-// Tất cả routes đều cần đăng nhập
-router.use(authMiddleware);
+// All category routes require authentication
+router.use(authenticateToken);
 
-// CRUD operations
-router.post('/', categoryController.createCategory);
-router.get('/', categoryController.getAllCategories);
-router.get('/:categoryId', categoryController.getCategoryById);
-router.put('/:categoryId', categoryController.updateCategory);
-router.delete('/:categoryId', categoryController.deleteCategory);
+// Category CRUD
+router.post('/',               validateCreateCategory,  categoryController.createCategory);
+router.get('/',                                         categoryController.getAllCategories);
+router.get('/:categoryId',                              categoryController.getCategoryById);
+router.patch('/:categoryId',   validateUpdateCategory,  categoryController.updateCategory);
+router.delete('/:categoryId',                           categoryController.deleteCategory);
 
-module.exports = router;
+export default router;

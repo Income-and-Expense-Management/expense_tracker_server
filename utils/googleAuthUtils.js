@@ -1,4 +1,5 @@
-const { OAuth2Client } = require('google-auth-library');
+import { OAuth2Client } from 'google-auth-library';
+import { logger } from './logger.js';
 
 /**
  * Google Auth Utility - Verify Google ID tokens
@@ -22,7 +23,7 @@ const client = new OAuth2Client(GOOGLE_CLIENT_ID);
  */
 async function verifyGoogleToken(idToken) {
   try {
-    console.log('GoogleAuth: Verifying ID token...');
+    logger.info('GoogleAuth: Verifying ID token...');
     
     const ticket = await client.verifyIdToken({
       idToken: idToken,
@@ -31,10 +32,9 @@ async function verifyGoogleToken(idToken) {
     
     const payload = ticket.getPayload();
     
-    console.log('GoogleAuth: Token verified successfully');
-    console.log('GoogleAuth: Email:', payload.email);
-    console.log('GoogleAuth: Name:', payload.name);
-    console.log('GoogleAuth: Picture:', payload.picture);
+    logger.info('GoogleAuth: Token verified successfully');
+    logger.debug('GoogleAuth: Email:', payload.email);
+    logger.debug('GoogleAuth: Name:', payload.name);
     
     return {
       googleId: payload.sub,           // Unique Google user ID
@@ -46,7 +46,7 @@ async function verifyGoogleToken(idToken) {
       familyName: payload.family_name,
     };
   } catch (error) {
-    console.error('GoogleAuth: Token verification failed:', error.message);
+    logger.error('GoogleAuth: Token verification failed:', error.message);
     throw new Error('Google token không hợp lệ');
   }
 }
@@ -68,12 +68,12 @@ async function verifyGoogleTokenLenient(idToken, email) {
     // Try standard verification first
     return await verifyGoogleToken(idToken);
   } catch (error) {
-    console.log('GoogleAuth: Standard verification failed, trying lenient mode...');
+    logger.info('GoogleAuth: Standard verification failed, trying lenient mode...');
     
     // Fallback: Decode JWT without verification (for development only!)
     // In production, you should configure proper client IDs
     if (process.env.NODE_ENV === 'development' && process.env.GOOGLE_AUTH_LENIENT === 'true') {
-      console.warn('GoogleAuth: WARNING - Using lenient mode (development only!)');
+      logger.warn('GoogleAuth: WARNING - Using lenient mode (development only!)');
       
       // Decode the JWT payload (middle part)
       const parts = idToken.split('.');
@@ -103,7 +103,7 @@ async function verifyGoogleTokenLenient(idToken, email) {
   }
 }
 
-module.exports = {
+export default {
   verifyGoogleToken,
   verifyGoogleTokenLenient,
 };

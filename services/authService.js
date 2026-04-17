@@ -1,17 +1,29 @@
-const userRepository = require('../repositories/userRepository');
-const passwordUtils = require('../utils/passwordUtils');
-const jwtUtils = require('../utils/jwtUtils');
-const googleAuthUtils = require('../utils/googleAuthUtils');
+import userRepository from '../repositories/userRepository.js';
+import { passwordUtils } from '../utils/passwordUtils.js';
+import jwtUtils from '../utils/jwtUtils.js';
+import googleAuthUtils from '../utils/googleAuthUtils.js';
+import { ERROR_MESSAGES } from '../utils/errorMessages.js';
+import { logger } from '../utils/logger.js';
 
-class AuthService {
+export const authService = {
+  /**
+   * Register a new user account with email and password.
+   * @param {Object} data
+   * @param {string} data.email
+   * @param {string} data.password
+   * @param {string} [data.full_name]
+   * @param {string} [data.avatar_url]
+   * @returns {Promise<{user: Object, token: string}>}
+   * @throws {Error} ERROR_MESSAGES.EMAIL_ALREADY_EXISTS
+   */
   async register({ email, password, full_name, avatar_url }) {
-    console.log('AuthService.register called for:', email);
+    logger.info('AuthService.register called for:', email);
 
     // Kiểm tra email đã tồn tại chưa
     const existingUser = await userRepository.findByEmail(email);
-    console.log('AuthService.register existingUser:', existingUser ? existingUser.id : null);
+    logger.debug('AuthService.register existingUser:', existingUser ? existingUser.id : null);
     if (existingUser) {
-      throw new Error('Email đã được sử dụng');
+      throw new Error(ERROR_MESSAGES.EMAIL_ALREADY_EXISTS);
     }
 
     // Mã hóa mật khẩu
@@ -25,43 +37,48 @@ class AuthService {
       avatar_url: avatar_url || null,
       auth_provider: 'local',
     });
-    console.log('AuthService.register created user id:', user.id);
+    logger.info('AuthService.register created user id:', user.id);
 
     // Tạo JWT token (do not log the token value)
     const token = jwtUtils.generateToken({
       userId: user.id,
       email: user.email,
     });
-    console.log('AuthService.register generated token for userId:', user.id);
+    logger.info('AuthService.register generated token for userId:', user.id);
 
     return {
       user,
       token,
     };
-  }
+  },
 
+  /**
+   * Login with email and password.
+   * @param {Object} data
+   * @param {string} data.email
+   * @param {string} data.password
+   * @returns {Promise<{user: Object, token: string}>}
+   * @throws {Error} ERROR_MESSAGES.INVALID_CREDENTIALS
+   * @throws {Error} ERROR_MESSAGES.WRONG_AUTH_PROVIDER
+   */
   async login({ email, password }) {
-    console.log('AuthService.login called for:', email);
+    logger.info('AuthService.login called for:', email);
 
     // Tìm user theo email
     const user = await userRepository.findByEmail(email);
-    console.log('AuthService.login found user:', user ? user.id : null);
     if (!user) {
-      console.log('AuthService.login: user not found for email:', email);
-      throw new Error('Email hoặc mật khẩu không đúng');
+      throw new Error(ERROR_MESSAGES.INVALID_CREDENTIALS);
     }
 
-    // Kiểm tra nếu user đăng ký bằng provider khác
-    if (!user.password) {
-      console.log('AuthService.login: user has no local password, provider=', user.auth_provider);
-      throw new Error('Tài khoản này sử dụng phương thức đăng nhập khác');
+    // Kiểm tra phương thức đăng nhập
+    if (user.auth_provider === 'google' && !user.password) {
+      throw new Error(ERROR_MESSAGES.WRONG_AUTH_PROVIDER);
     }
 
-    // So sánh mật khẩu (do NOT log plaintext password)
+    // Xác thực mật khẩu
     const isPasswordValid = await passwordUtils.comparePassword(password, user.password);
-    console.log('AuthService.login password valid:', isPasswordValid);
     if (!isPasswordValid) {
-      throw new Error('Email hoặc mật khẩu không đúng');
+      throw new Error(ERROR_MESSAGES.INVALID_CREDENTIALS);
     }
 
     // Tạo JWT token
@@ -69,49 +86,71 @@ class AuthService {
       userId: user.id,
       email: user.email,
     });
-    console.log('AuthService.login generated token for userId:', user.id);
+    logger.info('AuthService.login generated token for userId:', user.id);
 
-    // Loại bỏ password khỏi response
+    // Trả về user info (không bao gồm password)
     const { password: _, ...userWithoutPassword } = user;
 
     return {
       user: userWithoutPassword,
       token,
     };
-  }
+  },
 
+  /**
+   * Get user profile by ID.
+   * @param {string} userId
+   * @returns {Promise<Object>} User profile object
+   * @throws {Error} ERROR_MESSAGES.USER_NOT_FOUND
+   */
   async getProfile(userId) {
-    console.log('AuthService.getProfile for userId:', userId);
+    logger.info('AuthService.getProfile for userId:', userId);
     const user = await userRepository.findById(userId);
-    console.log('AuthService.getProfile result:', user ? user.id : null);
+    logger.debug('AuthService.getProfile result:', user ? user.id : null);
     if (!user) {
-      throw new Error('Không tìm thấy người dùng');
+      throw new Error(ERROR_MESSAGES.USER_NOT_FOUND);
     }
     return user;
-  }
+  },
 
+  /**
+   * Update user profile (full_name, avatar_url).
+   * @param {string} userId
+   * @param {Object} data
+   * @param {string} [data.full_name]
+   * @param {string} [data.avatar_url]
+   * @returns {Promise<Object>} Updated user profile
+   */
   async updateProfile(userId, { full_name, avatar_url }) {
-    console.log('AuthService.updateProfile for userId:', userId, 'payload:', { full_name, avatar_url });
+    logger.info('AuthService.updateProfile for userId:', userId);
     const updateData = {};
     if (full_name !== undefined) updateData.full_name = full_name;
     if (avatar_url !== undefined) updateData.avatar_url = avatar_url;
 
     const user = await userRepository.update(userId, updateData);
-    console.log('AuthService.updateProfile updated user id:', user.id);
+    logger.info('AuthService.updateProfile updated user id:', user.id);
     return user;
-  }
+  },
 
+  /**
+   * Change user password. Requires old password verification.
+   * @param {string} userId
+   * @param {Object} data
+   * @param {string} data.oldPassword
+   * @param {string} data.newPassword
+   * @returns {Promise<{message: string}>}
+   * @throws {Error} ERROR_MESSAGES.WRONG_OLD_PASSWORD
+   */
   async changePassword(userId, { oldPassword, newPassword }) {
-    console.log('AuthService.changePassword for userId:', userId);
-    const userById = await userRepository.findById(userId);
-    const user = await userRepository.findByEmail(userById.email);
-    console.log('AuthService.changePassword found user:', user ? user.id : null);
+    logger.info('AuthService.changePassword for userId:', userId);
+    // Use findByIdWithPassword to fetch the password hash in a single query
+    const user = await userRepository.findByIdWithPassword(userId);
+    logger.debug('AuthService.changePassword found user:', user ? user.id : null);
 
     // Kiểm tra mật khẩu cũ (do NOT log plaintext passwords)
     const isPasswordValid = await passwordUtils.comparePassword(oldPassword, user.password);
-    console.log('AuthService.changePassword old password valid:', isPasswordValid);
     if (!isPasswordValid) {
-      throw new Error('Mật khẩu cũ không đúng');
+      throw new Error(ERROR_MESSAGES.WRONG_OLD_PASSWORD);
     }
 
     // Mã hóa mật khẩu mới
@@ -119,46 +158,41 @@ class AuthService {
 
     // Cập nhật mật khẩu
     await userRepository.update(userId, { password: hashedPassword });
-    console.log('AuthService.changePassword updated password for userId:', userId);
+    logger.info('AuthService.changePassword updated password for userId:', userId);
 
     return { message: 'Đổi mật khẩu thành công' };
-  }
+  },
 
   /**
-   * Login or Register with Google
-   * 
-   * Flow:
-   * 1. Verify Google ID token
-   * 2. Check if user exists by email
-   * 3. If exists: update info and login
-   * 4. If not exists: create new user
-   * 5. Return JWT token
-   * 
-   * @param {string} idToken - Google ID token from Android
-   * @param {string} displayName - Display name from Android
-   * @param {string} email - Email from Android
+   * Login or register with Google OAuth ID token.
+   * @param {Object} data
+   * @param {string} data.idToken - Google ID token
+   * @param {string} [data.displayName]
+   * @param {string} data.email
+   * @returns {Promise<{user: Object, token: string}>}
+   * @throws {Error} ERROR_MESSAGES.INVALID_GOOGLE_TOKEN
    */
   async loginWithGoogle({ idToken, displayName, email }) {
-    console.log('AuthService.loginWithGoogle called for email:', email);
+    logger.info('AuthService.loginWithGoogle called for email:', email);
 
     // Step 1: Verify Google ID token
     let googleUser;
     try {
       // Try lenient verification (handles Android vs Web client ID mismatch)
       googleUser = await googleAuthUtils.verifyGoogleTokenLenient(idToken, email);
-      console.log('AuthService.loginWithGoogle: Token verified, googleId:', googleUser.googleId);
+      logger.info('AuthService.loginWithGoogle: Token verified, googleId:', googleUser.googleId);
     } catch (error) {
-      console.error('AuthService.loginWithGoogle: Token verification failed:', error.message);
-      throw new Error('Google token không hợp lệ hoặc đã hết hạn');
+      logger.error('AuthService.loginWithGoogle: Token verification failed:', error.message);
+      throw new Error(ERROR_MESSAGES.INVALID_GOOGLE_TOKEN);
     }
 
     // Step 2: Check if user exists
     let user = await userRepository.findByEmail(googleUser.email);
-    console.log('AuthService.loginWithGoogle: Existing user:', user ? user.id : 'not found');
+    logger.debug('AuthService.loginWithGoogle: Existing user:', user ? user.id : 'not found');
 
     if (user) {
       // Step 3a: User exists - update info if needed
-      console.log('AuthService.loginWithGoogle: Updating existing user');
+      logger.debug('AuthService.loginWithGoogle: Updating existing user');
       
       const updateData = {};
       
@@ -175,18 +209,18 @@ class AuthService {
       // Update auth_provider if user was local before
       if (user.auth_provider === 'local') {
         // Keep as local - user can still login with password
-        console.log('AuthService.loginWithGoogle: User has local auth, keeping both methods');
+        logger.debug('AuthService.loginWithGoogle: User has local auth, keeping both methods');
       } else if (user.auth_provider !== 'google') {
         updateData.auth_provider = 'google';
       }
 
       if (Object.keys(updateData).length > 0) {
         user = await userRepository.update(user.id, updateData);
-        console.log('AuthService.loginWithGoogle: User updated');
+        logger.info('AuthService.loginWithGoogle: User updated');
       }
     } else {
       // Step 3b: User doesn't exist - create new user
-      console.log('AuthService.loginWithGoogle: Creating new user');
+      logger.info('AuthService.loginWithGoogle: Creating new user');
       
       user = await userRepository.create({
         email: googleUser.email,
@@ -195,7 +229,7 @@ class AuthService {
         avatar_url: googleUser.picture || null,
         auth_provider: 'google',
       });
-      console.log('AuthService.loginWithGoogle: New user created with id:', user.id);
+      logger.info('AuthService.loginWithGoogle: New user created with id:', user.id);
     }
 
     // Step 4: Generate JWT token
@@ -203,13 +237,13 @@ class AuthService {
       userId: user.id,
       email: user.email,
     });
-    console.log('AuthService.loginWithGoogle: Token generated for userId:', user.id);
+    logger.info('AuthService.loginWithGoogle: Token generated for userId:', user.id);
 
     return {
       user,
       token,
     };
-  }
-}
+  },
+};
 
-module.exports = new AuthService();
+export default authService;

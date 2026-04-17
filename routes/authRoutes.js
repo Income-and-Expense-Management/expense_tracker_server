@@ -1,17 +1,25 @@
-const express = require('express');
+import express from 'express';
+import authController from '../controllers/authController.js';
+import { authenticateToken } from '../middleware/authenticateToken.js';
+import {
+  validateRegister,
+  validateLogin,
+  validateGoogleLogin,
+  validateUpdateProfile,
+  validateChangePassword,
+} from '../middleware/validators/authValidators.js';
+
 const router = express.Router();
-const authController = require('../controllers/authController');
-const authMiddleware = require('../middleware/authMiddleware');
 
 // Public routes (không cần đăng nhập)
-router.post('/register', authController.register);
-router.post('/login', authController.login);
-router.post('/google', authController.loginWithGoogle);
+router.post('/register', validateRegister,     authController.register);
+router.post('/login',    validateLogin,        authController.login);
+router.post('/google',   validateGoogleLogin,  authController.loginWithGoogle);
 
 // Protected routes (cần đăng nhập)
-router.post('/logout', authMiddleware, authController.logout);
-router.get('/profile', authMiddleware, authController.getProfile);
-router.put('/profile', authMiddleware, authController.updateProfile);
-router.put('/change-password', authMiddleware, authController.changePassword);
+router.post('/logout',           authenticateToken,                              authController.logout);
+router.get('/profile',           authenticateToken,                              authController.getProfile);
+router.patch('/profile',         authenticateToken, validateUpdateProfile,       authController.updateProfile);
+router.patch('/change-password', authenticateToken, validateChangePassword,      authController.changePassword);
 
-module.exports = router;
+export default router;

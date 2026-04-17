@@ -1,21 +1,17 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+import prisma from '../config/database.js';
 
-class TransactionRepository {
+const transactionRepository = {
   async create(transactionData) {
     return await prisma.transaction.create({
       data: transactionData,
     });
-  }
+  },
 
   async findById(id) {
     return await prisma.transaction.findUnique({
       where: { id },
-      include: {
-        // Nếu cần thêm thông tin category
-      },
     });
-  }
+  },
 
   async findByWalletId(walletId, filters = {}) {
     const where = { wallet_id: walletId };
@@ -42,7 +38,7 @@ class TransactionRepository {
       where,
       orderBy: { transaction_date: 'desc' },
     });
-  }
+  },
 
   async findByUserId(userId, filters = {}) {
     const wallets = await prisma.wallet.findMany({
@@ -82,7 +78,7 @@ class TransactionRepository {
       where,
       orderBy: { transaction_date: 'desc' },
     });
-  }
+  },
 
   async update(id, transactionData) {
     return await prisma.transaction.update({
@@ -92,14 +88,21 @@ class TransactionRepository {
         updated_at: new Date(),
       },
     });
-  }
+  },
 
   async delete(id) {
     return await prisma.transaction.delete({
       where: { id },
     });
-  }
+  },
 
+  /**
+   * Compute income/expense statistics for a wallet within an optional date range.
+   * @param {string} walletId
+   * @param {string|null} [startDate] - ISO date string
+   * @param {string|null} [endDate] - ISO date string
+   * @returns {Promise<{total_income: string, total_expense: string, balance: string, transaction_count: number}>}
+   */
   async getStatistics(walletId, startDate, endDate) {
     const where = {
       wallet_id: walletId,
@@ -130,7 +133,7 @@ class TransactionRepository {
       balance: (totalIncome - totalExpense).toString(),
       transaction_count: transactions.length,
     };
-  }
-}
+  },
+};
 
-module.exports = new TransactionRepository();
+export default transactionRepository;

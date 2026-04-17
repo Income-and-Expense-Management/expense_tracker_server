@@ -1,32 +1,36 @@
-const categoryService = require('../services/categoryService');
-const responseUtils = require('../utils/responseUtils');
+import { categoryService } from '../services/categoryService.js';
+import ApiResponse from '../utils/responseUtils.js';
+import { ERROR_MESSAGES } from '../utils/errorMessages.js';
+import { logger } from '../utils/logger.js';
 
-class CategoryController {
+/**
+ * Category controller — thin HTTP adapter.
+ * All field validation is handled by categoryValidators.js middleware upstream.
+ */
+const categoryController = {
+  /**
+   * POST /categories
+   */
   async createCategory(req, res) {
     try {
       const userId = req.user.userId;
       const { name, type, icon_name } = req.body;
 
-      if (!name || !type) {
-        return responseUtils.badRequest(res, 'Tên và loại danh mục là bắt buộc');
-      }
+      const category = await categoryService.createCategory(userId, { name, type, icon_name });
 
-      const category = await categoryService.createCategory(userId, {
-        name,
-        type,
-        icon_name,
-      });
-
-      return responseUtils.created(res, category, 'Tạo danh mục thành công');
+      return ApiResponse.created(res, category, 'Tạo danh mục thành công');
     } catch (error) {
-      if (error.message.includes('không hợp lệ')) {
-        return responseUtils.badRequest(res, error.message);
+      if (error.message === ERROR_MESSAGES.INVALID_CATEGORY_TYPE) {
+        return ApiResponse.badRequest(res, error.message);
       }
-      console.error('Create category error:', error);
-      return responseUtils.error(res, error.message);
+      logger.error('Create category error:', error);
+      return ApiResponse.error(res, error.message);
     }
-  }
+  },
 
+  /**
+   * GET /categories/:categoryId
+   */
   async getCategoryById(req, res) {
     try {
       const userId = req.user.userId;
@@ -34,19 +38,22 @@ class CategoryController {
 
       const category = await categoryService.getCategoryById(categoryId, userId);
 
-      return responseUtils.success(res, category, 'Lấy thông tin danh mục thành công');
+      return ApiResponse.success(res, category, 'Lấy thông tin danh mục thành công');
     } catch (error) {
-      if (error.message === 'Không tìm thấy danh mục') {
-        return responseUtils.notFound(res, error.message);
+      if (error.message === ERROR_MESSAGES.CATEGORY_NOT_FOUND) {
+        return ApiResponse.notFound(res, error.message);
       }
-      if (error.message.includes('không có quyền')) {
-        return responseUtils.forbidden(res, error.message);
+      if (error.message === ERROR_MESSAGES.CATEGORY_ACCESS_DENIED) {
+        return ApiResponse.forbidden(res, error.message);
       }
-      console.error('Get category error:', error);
-      return responseUtils.error(res, error.message);
+      logger.error('Get category error:', error);
+      return ApiResponse.error(res, error.message);
     }
-  }
+  },
 
+  /**
+   * GET /categories
+   */
   async getAllCategories(req, res) {
     try {
       const userId = req.user.userId;
@@ -54,13 +61,16 @@ class CategoryController {
 
       const categories = await categoryService.getAllCategories(userId, type);
 
-      return responseUtils.success(res, categories, 'Lấy danh sách danh mục thành công');
+      return ApiResponse.success(res, categories, 'Lấy danh sách danh mục thành công');
     } catch (error) {
-      console.error('Get all categories error:', error);
-      return responseUtils.error(res, error.message);
+      logger.error('Get all categories error:', error);
+      return ApiResponse.error(res, error.message);
     }
-  }
+  },
 
+  /**
+   * PATCH /categories/:categoryId
+   */
   async updateCategory(req, res) {
     try {
       const userId = req.user.userId;
@@ -73,41 +83,45 @@ class CategoryController {
         icon_name,
       });
 
-      return responseUtils.success(res, category, 'Cập nhật danh mục thành công');
+      return ApiResponse.success(res, category, 'Cập nhật danh mục thành công');
     } catch (error) {
-      if (error.message === 'Không tìm thấy danh mục') {
-        return responseUtils.notFound(res, error.message);
+      if (error.message === ERROR_MESSAGES.CATEGORY_NOT_FOUND) {
+        return ApiResponse.notFound(res, error.message);
       }
-      if (error.message.includes('không có quyền')) {
-        return responseUtils.forbidden(res, error.message);
+      if (error.message === ERROR_MESSAGES.CATEGORY_UPDATE_DENIED) {
+        return ApiResponse.forbidden(res, error.message);
       }
-      if (error.message.includes('không hợp lệ')) {
-        return responseUtils.badRequest(res, error.message);
+      if (error.message === ERROR_MESSAGES.INVALID_CATEGORY_TYPE) {
+        return ApiResponse.badRequest(res, error.message);
       }
-      console.error('Update category error:', error);
-      return responseUtils.error(res, error.message);
+      logger.error('Update category error:', error);
+      return ApiResponse.error(res, error.message);
     }
-  }
+  },
 
+  /**
+   * DELETE /categories/:categoryId
+   * Returns 204 No Content on success (REST §3).
+   */
   async deleteCategory(req, res) {
     try {
       const userId = req.user.userId;
       const { categoryId } = req.params;
 
-      const result = await categoryService.deleteCategory(categoryId, userId);
+      await categoryService.deleteCategory(categoryId, userId);
 
-      return responseUtils.success(res, result, 'Xóa danh mục thành công');
+      return ApiResponse.noContent(res);
     } catch (error) {
-      if (error.message === 'Không tìm thấy danh mục') {
-        return responseUtils.notFound(res, error.message);
+      if (error.message === ERROR_MESSAGES.CATEGORY_NOT_FOUND) {
+        return ApiResponse.notFound(res, error.message);
       }
-      if (error.message.includes('không có quyền')) {
-        return responseUtils.forbidden(res, error.message);
+      if (error.message === ERROR_MESSAGES.CATEGORY_DELETE_DENIED) {
+        return ApiResponse.forbidden(res, error.message);
       }
-      console.error('Delete category error:', error);
-      return responseUtils.error(res, error.message);
+      logger.error('Delete category error:', error);
+      return ApiResponse.error(res, error.message);
     }
-  }
-}
+  },
+};
 
-module.exports = new CategoryController();
+export default categoryController;

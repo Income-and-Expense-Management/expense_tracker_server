@@ -1,17 +1,18 @@
-const prisma = require('../config/database');
+import prisma from '../config/database.js';
+import { logger } from '../utils/logger.js';
 
-class UserRepository {
+const userRepository = {
   async findByEmail(email) {
-    console.log('UserRepository.findByEmail:', email);
+    logger.debug('UserRepository.findByEmail:', email);
     const result = await prisma.user.findUnique({
       where: { email },
     });
-    console.log('UserRepository.findByEmail result:', result ? result.id : null);
+    logger.debug('UserRepository.findByEmail result:', result ? result.id : null);
     return result;
-  }
+  },
 
   async findById(id) {
-    console.log('UserRepository.findById:', id);
+    logger.debug('UserRepository.findById:', id);
     const result = await prisma.user.findUnique({
       where: { id },
       select: {
@@ -23,12 +24,27 @@ class UserRepository {
         created_at: true,
       },
     });
-    console.log('UserRepository.findById result:', result ? result.id : null);
+    logger.debug('UserRepository.findById result:', result ? result.id : null);
     return result;
-  }
+  },
+
+  /**
+   * Fetch a user by ID **including** the hashed password field.
+   * Only for internal auth operations (changePassword). Never expose to clients.
+   * @param {string} id
+   * @returns {Promise<Object|null>}
+   */
+  async findByIdWithPassword(id) {
+    logger.debug('UserRepository.findByIdWithPassword:', id);
+    const result = await prisma.user.findUnique({
+      where: { id },
+    });
+    logger.debug('UserRepository.findByIdWithPassword result:', result ? result.id : null);
+    return result;
+  },
 
   async create(userData) {
-    console.log('UserRepository.create for:', userData.email);
+    logger.info('UserRepository.create for:', userData.email);
     const result = await prisma.user.create({
       data: userData,
       select: {
@@ -40,12 +56,12 @@ class UserRepository {
         created_at: true,
       },
     });
-    console.log('UserRepository.create result id:', result.id);
+    logger.info('UserRepository.create result id:', result.id);
     return result;
-  }
+  },
 
   async update(id, userData) {
-    console.log('UserRepository.update id:', id, 'payload:', userData);
+    logger.debug('UserRepository.update id:', id);
     const result = await prisma.user.update({
       where: { id },
       data: userData,
@@ -58,18 +74,18 @@ class UserRepository {
         created_at: true,
       },
     });
-    console.log('UserRepository.update result id:', result.id);
+    logger.debug('UserRepository.update result id:', result.id);
     return result;
-  }
+  },
 
   async delete(id) {
-    console.log('UserRepository.delete id:', id);
+    logger.info('UserRepository.delete id:', id);
     const result = await prisma.user.delete({
       where: { id },
     });
-    console.log('UserRepository.delete result id:', result ? result.id : null);
+    logger.info('UserRepository.delete result id:', result ? result.id : null);
     return result;
-  }
-}
+  },
+};
 
-module.exports = new UserRepository();
+export default userRepository;

@@ -1,5 +1,7 @@
+import { logger } from '../utils/logger.js';
+
 // Simple request/response logger for debugging
-module.exports = (req, res, next) => {
+export default (req, res, next) => {
   const start = Date.now();
   const { method, originalUrl } = req;
 
@@ -10,14 +12,14 @@ module.exports = (req, res, next) => {
   try {
     const qs = Object.keys(req.query).length ? ` query=${JSON.stringify(req.query)}` : '';
     const bd = req.body && Object.keys(req.body).length ? ` body=${JSON.stringify(req.body)}` : '';
-    console.log(`[Req] ${method} ${originalUrl}${qs}${bd} headers=${JSON.stringify(safeHeaders)}`);
+    logger.debug(`[Req] ${method} ${originalUrl}${qs}${bd} headers=${JSON.stringify(safeHeaders)}`);
   } catch (err) {
-    console.log(`[Req] ${method} ${originalUrl} (failed to stringify request payload)`);
+    logger.debug(`[Req] ${method} ${originalUrl} (failed to stringify request payload)`);
   }
 
   res.on('finish', () => {
     const duration = Date.now() - start;
-    console.log(`[Res] ${method} ${originalUrl} -> ${res.statusCode} (${duration}ms)`);
+    logger.debug(`[Res] ${method} ${originalUrl} -> ${res.statusCode} (${duration}ms)`);
   });
 
   next();

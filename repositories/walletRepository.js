@@ -1,28 +1,27 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+import prisma from '../config/database.js';
 
-class WalletRepository {
+const walletRepository = {
   async create(walletData) {
     return await prisma.wallet.create({
       data: walletData,
     });
-  }
+  },
 
   async findById(id) {
     return await prisma.wallet.findUnique({
       where: { id },
     });
-  }
+  },
 
   async findByUserId(userId) {
     return await prisma.wallet.findMany({
-      where: { 
+      where: {
         user_id: userId,
-        is_active: true
+        is_active: true,
       },
       orderBy: { created_at: 'desc' },
     });
-  }
+  },
 
   async update(id, walletData) {
     return await prisma.wallet.update({
@@ -32,24 +31,30 @@ class WalletRepository {
         updated_at: new Date(),
       },
     });
-  }
+  },
 
   async softDelete(id) {
     return await prisma.wallet.update({
       where: { id },
-      data: { 
+      data: {
         is_active: false,
         updated_at: new Date(),
       },
     });
-  }
+  },
 
   async delete(id) {
     return await prisma.wallet.delete({
       where: { id },
     });
-  }
+  },
 
+  /**
+   * Compute the real-time balance of a wallet.
+   * Returns the wallet row augmented with a computed `current_balance` string.
+   * @param {string} walletId
+   * @returns {Promise<Object|null>} wallet + current_balance (String), or null if not found.
+   */
   async getWalletBalance(walletId) {
     const wallet = await prisma.wallet.findUnique({
       where: { id: walletId },
@@ -75,7 +80,7 @@ class WalletRepository {
       ...wallet,
       current_balance: currentBalance.toString(),
     };
-  }
-}
+  },
+};
 
-module.exports = new WalletRepository();
+export default walletRepository;

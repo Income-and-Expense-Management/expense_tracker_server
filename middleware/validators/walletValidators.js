@@ -6,6 +6,7 @@ import ApiResponse from '../../utils/responseUtils.js';
 // ---------------------------------------------------------------------------
 
 const createWalletSchema = z.object({
+  id: z.string().uuid('ID ví không hợp lệ').optional(),
   name: z
     .string({ required_error: 'Tên ví là bắt buộc' })
     .min(1, 'Tên ví là bắt buộc')

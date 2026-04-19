@@ -15,9 +15,10 @@ const walletController = {
   async createWallet(req, res) {
     try {
       const userId = req.user.userId;
-      const { name, initial_balance, currency, icon_id } = req.body;
+      const { id, name, initial_balance, currency, icon_id } = req.body;
 
       const wallet = await walletService.createWallet(userId, {
+        id,
         name,
         initial_balance,
         currency,

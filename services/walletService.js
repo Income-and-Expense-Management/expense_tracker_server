@@ -15,9 +15,10 @@ export const walletService = {
    */
   async createWallet(userId, walletData) {
     logger.info('WalletService.createWallet for userId:', userId);
-    const { name, initial_balance, currency, icon_id } = walletData;
+    const { id, name, initial_balance, currency, icon_id } = walletData;
 
     const newWallet = await walletRepository.create({
+      ...(id && { id }),
       user_id: userId,
       name,
       initial_balance: initial_balance ? BigInt(initial_balance) : BigInt(0),

@@ -245,6 +245,10 @@ Budget Endpoints:
   GET    /api/v1/budgets/:budgetId
   PATCH  /api/v1/budgets/:budgetId            ← was PUT
   DELETE /api/v1/budgets/:budgetId            → 204 No Content
+
+Sync Endpoints (Offline-first Support):
+  GET    /api/v1/sync/pull?last_sync_time=    (protected)
+  POST   /api/v1/sync/push                    (protected)
 ```
 
 ---

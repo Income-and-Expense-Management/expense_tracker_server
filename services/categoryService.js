@@ -47,7 +47,7 @@ export const categoryService = {
       throw new Error(ERROR_MESSAGES.CATEGORY_NOT_FOUND);
     }
 
-    if (category.user_id !== userId) {
+    if (category.user_id !== userId && category.user_id !== null) {
       throw new Error(ERROR_MESSAGES.CATEGORY_ACCESS_DENIED);
     }
 

@@ -23,7 +23,10 @@ const categoryRepository = {
    */
   async findByUserId(userId, type = null) {
     const where = {
-      user_id: userId,
+      OR: [
+        { user_id: userId },
+        { user_id: null }
+      ],
       is_active: true,
       deleted_at: null,
     };

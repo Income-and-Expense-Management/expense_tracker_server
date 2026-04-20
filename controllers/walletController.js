@@ -63,7 +63,7 @@ const walletController = {
       const userId = req.user.userId;
 
       const wallets = await walletService.getAllWallets(userId);
-
+      res.set('Cache-Control', 'no-store'); // Disable caching for dynamic user-specific data
       return ApiResponse.success(res, wallets, 'Lấy danh sách ví thành công');
     } catch (error) {
       logger.error('Get all wallets error:', error);

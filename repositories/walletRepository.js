@@ -73,13 +73,12 @@ const walletRepository = {
 
     transactions.forEach((trans) => {
       const categoryType = trans.category?.type;
-      if (categoryType === 'income') {
+      if (categoryType === 'INCOME') {
         currentBalance += BigInt(trans.amount);
-      } else if (categoryType === 'expense') {
+      } else if (categoryType === 'EXPENSE') {
         currentBalance -= BigInt(trans.amount);
       }
     });
-
     return {
       ...wallet,
       current_balance: currentBalance.toString(),

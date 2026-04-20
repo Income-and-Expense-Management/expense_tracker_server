@@ -8,7 +8,7 @@ export const categoryService = {
    * @param {string} userId - Owner user ID
    * @param {Object} categoryData
    * @param {string} categoryData.name - Category name
-   * @param {string} categoryData.type - 'income' or 'expense'
+   * @param {string} categoryData.type - 'INCOME' or 'EXPENSE'
    * @param {string} [categoryData.icon_name] - Icon name
    * @returns {Promise<Object>} Created category
    * @throws {Error} ERROR_MESSAGES.INVALID_CATEGORY_TYPE
@@ -17,7 +17,7 @@ export const categoryService = {
     logger.info('CategoryService.createCategory for userId:', userId);
     const { name, type, icon_name } = categoryData;
 
-    if (!['income', 'expense'].includes(type)) {
+    if (!['INCOME', 'EXPENSE'].includes(type)) {
       throw new Error(ERROR_MESSAGES.INVALID_CATEGORY_TYPE);
     }
 
@@ -94,7 +94,7 @@ export const categoryService = {
     const updateData = {};
     if (categoryData.name) updateData.name = categoryData.name;
     if (categoryData.type) {
-      if (!['income', 'expense'].includes(categoryData.type)) {
+      if (!['INCOME', 'EXPENSE'].includes(categoryData.type)) {
         throw new Error(ERROR_MESSAGES.INVALID_CATEGORY_TYPE);
       }
       updateData.type = categoryData.type;

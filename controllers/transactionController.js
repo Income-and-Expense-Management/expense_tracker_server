@@ -22,9 +22,7 @@ const transactionController = {
         wallet_id,
         category_id,
         amount,
-        type,
         transaction_date,
-        icon_id,
         note,
       });
 
@@ -53,7 +51,7 @@ const transactionController = {
       const { transactionId } = req.params;
 
       const transaction = await transactionService.getTransactionById(transactionId, userId);
-
+      res.set('Cache-Control', 'no-store'); // Disable caching for dynamic user-specific data
       return ApiResponse.success(res, transaction, 'Lấy thông tin giao dịch thành công');
     } catch (error) {
       if (error.message === ERROR_MESSAGES.TRANSACTION_NOT_FOUND) {
@@ -83,6 +81,7 @@ const transactionController = {
       if (end_date) filters.end_date = end_date;
 
       const transactions = await transactionService.getAllTransactions(userId, filters);
+      res.set('Cache-Control', 'no-store'); // Disable caching for dynamic user-specific data
 
       return ApiResponse.success(res, transactions, 'Lấy danh sách giao dịch thành công');
     } catch (error) {
@@ -98,14 +97,12 @@ const transactionController = {
     try {
       const userId = req.user.userId;
       const { transactionId } = req.params;
-      const { category_id, amount, type, transaction_date, icon_id, note } = req.body;
+      const { category_id, amount, transaction_date, note } = req.body;
 
       const transaction = await transactionService.updateTransaction(transactionId, userId, {
         category_id,
         amount,
-        type,
         transaction_date,
-        icon_id,
         note,
       });
 

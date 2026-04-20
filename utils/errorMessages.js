@@ -24,14 +24,14 @@ export const ERROR_MESSAGES = {
   TRANSACTION_CREATE_DENIED: 'Bạn không có quyền tạo giao dịch cho ví này',
   TRANSACTION_UPDATE_DENIED: 'Bạn không có quyền cập nhật giao dịch này',
   TRANSACTION_DELETE_DENIED: 'Bạn không có quyền xóa giao dịch này',
-  INVALID_TRANSACTION_TYPE: 'Loại giao dịch không hợp lệ. Chỉ chấp nhận income hoặc expense',
+  INVALID_TRANSACTION_TYPE: 'Loại giao dịch không hợp lệ. Chỉ chấp nhận INCOME hoặc EXPENSE',
 
   // Category
   CATEGORY_NOT_FOUND: 'Không tìm thấy danh mục',
   CATEGORY_ACCESS_DENIED: 'Bạn không có quyền thực hiện thao tác này với danh mục',
   CATEGORY_UPDATE_DENIED: 'Bạn không có quyền cập nhật danh mục này',
   CATEGORY_DELETE_DENIED: 'Bạn không có quyền xóa danh mục này',
-  INVALID_CATEGORY_TYPE: 'Loại danh mục không hợp lệ. Chỉ chấp nhận income hoặc expense',
+  INVALID_CATEGORY_TYPE: 'Loại danh mục không hợp lệ. Chỉ chấp nhận INCOME hoặc EXPENSE',
 
   // Budget
   BUDGET_NOT_FOUND: 'Không tìm thấy ngân sách',

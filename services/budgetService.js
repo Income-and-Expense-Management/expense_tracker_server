@@ -57,10 +57,28 @@ export const budgetService = {
     logger.info('BudgetService.getAllBudgets for userId:', userId);
     const budgets = await budgetRepository.findByUserId(userId, filters);
 
-    return budgets.map((budget) => ({
-      ...budget,
-      target_amount: budget.target_amount.toString(),
-    }));
+    const budgetsWithSpent = await Promise.all(
+      budgets.map(async (budget) => {
+        const totalSpent = await budgetRepository.getTotalSpent(
+          budget.wallet_id,
+          budget.category_id,
+          budget.start_date,
+          budget.end_date
+        );
+
+        const targetAmount = BigInt(budget.target_amount);
+        const remaining = targetAmount - totalSpent;
+
+        return {
+          ...budget,
+          target_amount: targetAmount.toString(),
+          total_spent: totalSpent.toString(),
+          remaining: remaining.toString(),
+        };
+      })
+    );
+
+    return budgetsWithSpent;
   },
 
   /**

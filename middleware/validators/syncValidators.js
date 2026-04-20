@@ -33,7 +33,7 @@ const categorySyncSchema = z.object({
 const transactionSyncSchema = z.object({
   id: z.string().uuid('transaction id không hợp lệ'),
   wallet_id: z.string().uuid('wallet_id không hợp lệ'),
-  category_id: z.string().uuid('category_id không hợp lệ').optional().nullable(),
+  category_id: z.union([z.string().min(1, 'category_id không hợp lệ'), z.literal('')]).transform(v => v === '' ? null : v).optional().nullable(),
   amount: z.union([z.string(), z.number()]).transform(String),
   transaction_date: z.string().datetime({ offset: true }),
   note: z.string().max(1000).optional().nullable(),
@@ -45,7 +45,7 @@ const transactionSyncSchema = z.object({
 const budgetSyncSchema = z.object({
   id: z.string().uuid('budget id không hợp lệ'),
   wallet_id: z.string().uuid('wallet_id không hợp lệ'),
-  category_id: z.string().uuid('category_id không hợp lệ'),
+  category_id: z.string().min(1, 'category_id không hợp lệ'),
   target_amount: z.union([z.string(), z.number()]).transform(String),
   start_date: z.string().datetime({ offset: true }).optional().nullable(),
   end_date: z.string().datetime({ offset: true }).optional().nullable(),
@@ -73,7 +73,8 @@ function makeValidator(schema) {
   return (req, res, next) => {
     const result = schema.safeParse(req.body);
     if (!result.success) {
-      const errors = result.error.errors.map((e) => ({
+      const issues = result.error.issues ?? result.error.errors ?? [];
+      const errors = issues.map((e) => ({
         field: e.path.join('.'),
         message: e.message,
       }));

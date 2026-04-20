@@ -10,9 +10,9 @@ const createCategorySchema = z.object({
     .string({ required_error: 'Tên danh mục là bắt buộc' })
     .min(1, 'Tên danh mục là bắt buộc')
     .max(255),
-  type: z.enum(['income', 'expense'], {
+  type: z.enum(['INCOME', 'EXPENSE'], {
     required_error: 'Loại danh mục là bắt buộc',
-    invalid_type_error: 'Loại danh mục không hợp lệ. Chỉ chấp nhận income hoặc expense',
+    invalid_type_error: 'Loại danh mục không hợp lệ. Chỉ chấp nhận INCOME hoặc EXPENSE',
   }),
   icon_name: z.string().max(255).optional().nullable(),
 });
@@ -20,8 +20,8 @@ const createCategorySchema = z.object({
 const updateCategorySchema = z.object({
   name: z.string().min(1, 'Tên danh mục không được để trống').max(255).optional(),
   type: z
-    .enum(['income', 'expense'], {
-      invalid_type_error: 'Loại danh mục không hợp lệ. Chỉ chấp nhận income hoặc expense',
+    .enum(['INCOME', 'EXPENSE'], {
+      invalid_type_error: 'Loại danh mục không hợp lệ. Chỉ chấp nhận INCOME hoặc EXPENSE',
     })
     .optional(),
   icon_name: z.string().max(255).optional().nullable(),
@@ -35,7 +35,8 @@ function makeValidator(schema) {
   return (req, res, next) => {
     const result = schema.safeParse(req.body);
     if (!result.success) {
-      const errors = result.error.errors.map((e) => ({
+      const issues = result.error.issues ?? result.error.errors ?? [];
+      const errors = issues.map((e) => ({
         field: e.path.join('.'),
         message: e.message,
       }));

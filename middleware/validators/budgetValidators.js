@@ -9,7 +9,7 @@ const createBudgetSchema = z.object({
   wallet_id: z.string({ required_error: 'Ví là bắt buộc' }).uuid('wallet_id không hợp lệ'),
   category_id: z
     .string({ required_error: 'Danh mục là bắt buộc' })
-    .uuid('category_id không hợp lệ'),
+    .min(1, 'category_id không hợp lệ'),
   target_amount: z.coerce
     .number({ required_error: 'Số tiền mục tiêu là bắt buộc' })
     .int()
@@ -19,7 +19,7 @@ const createBudgetSchema = z.object({
 });
 
 const updateBudgetSchema = z.object({
-  category_id: z.string().uuid('category_id không hợp lệ').optional(),
+  category_id: z.union([z.string().min(1, 'category_id không hợp lệ'), z.literal('')]).transform(v => v === '' ? null : v).optional().nullable(),
   target_amount: z.coerce
     .number()
     .int()
@@ -37,7 +37,8 @@ function makeValidator(schema) {
   return (req, res, next) => {
     const result = schema.safeParse(req.body);
     if (!result.success) {
-      const errors = result.error.errors.map((e) => ({
+      const issues = result.error.issues ?? result.error.errors ?? [];
+      const errors = issues.map((e) => ({
         field: e.path.join('.'),
         message: e.message,
       }));

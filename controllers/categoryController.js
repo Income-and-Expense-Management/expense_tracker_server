@@ -14,9 +14,9 @@ const categoryController = {
   async createCategory(req, res) {
     try {
       const userId = req.user.userId;
-      const { name, type, icon_name } = req.body;
+      const { id, name, type, icon_name } = req.body;
 
-      const category = await categoryService.createCategory(userId, { name, type, icon_name });
+      const category = await categoryService.createCategory(userId, { id, name, type, icon_name });
 
       return ApiResponse.created(res, category, 'Tạo danh mục thành công');
     } catch (error) {

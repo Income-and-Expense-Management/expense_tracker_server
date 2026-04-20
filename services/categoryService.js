@@ -15,13 +15,14 @@ export const categoryService = {
    */
   async createCategory(userId, categoryData) {
     logger.info('CategoryService.createCategory for userId:', userId);
-    const { name, type, icon_name } = categoryData;
+    const { id, name, type, icon_name } = categoryData;
 
     if (!['INCOME', 'EXPENSE'].includes(type)) {
       throw new Error(ERROR_MESSAGES.INVALID_CATEGORY_TYPE);
     }
 
     const newCategory = await categoryRepository.create({
+      ...(id ? { id } : {}),
       user_id: userId,
       name,
       type,

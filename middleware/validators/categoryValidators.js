@@ -6,6 +6,7 @@ import ApiResponse from '../../utils/responseUtils.js';
 // ---------------------------------------------------------------------------
 
 const createCategorySchema = z.object({
+  id: z.string().uuid().optional(),
   name: z
     .string({ required_error: 'Tên danh mục là bắt buộc' })
     .min(1, 'Tên danh mục là bắt buộc')

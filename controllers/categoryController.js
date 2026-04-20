@@ -57,9 +57,11 @@ const categoryController = {
   async getAllCategories(req, res) {
     try {
       const userId = req.user.userId;
-      const { type } = req.query;
+      const { type, include_inactive } = req.query;
+      
+      const includeInactive = include_inactive === 'true';
 
-      const categories = await categoryService.getAllCategories(userId, type);
+      const categories = await categoryService.getAllCategories(userId, type, includeInactive);
 
       return ApiResponse.success(res, categories, 'Lấy danh sách danh mục thành công');
     } catch (error) {
@@ -75,12 +77,13 @@ const categoryController = {
     try {
       const userId = req.user.userId;
       const { categoryId } = req.params;
-      const { name, type, icon_name } = req.body;
+      const { name, type, icon_name, is_active } = req.body;
 
       const category = await categoryService.updateCategory(categoryId, userId, {
         name,
         type,
         icon_name,
+        is_active
       });
 
       return ApiResponse.success(res, category, 'Cập nhật danh mục thành công');

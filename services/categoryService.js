@@ -58,11 +58,12 @@ export const categoryService = {
    * Get all categories for a user, optionally filtered by type.
    * @param {string} userId - Owner user ID
    * @param {string|null} [type=null] - Optional type filter ('income' or 'expense')
+   * @param {boolean} [includeInactive=false] - Whether to include is_active=false categories
    * @returns {Promise<Array<Object>>} Array of categories
    */
-  async getAllCategories(userId, type = null) {
+  async getAllCategories(userId, type = null, includeInactive = false) {
     logger.info('CategoryService.getAllCategories for userId:', userId);
-    const categories = await categoryRepository.findByUserId(userId, type);
+    const categories = await categoryRepository.findByUserId(userId, type, includeInactive);
     return categories;
   },
 
@@ -87,20 +88,33 @@ export const categoryService = {
       throw new Error(ERROR_MESSAGES.CATEGORY_NOT_FOUND);
     }
 
-    if (category.user_id !== userId) {
+    if (category.user_id !== userId && category.user_id !== null) {
       throw new Error(ERROR_MESSAGES.CATEGORY_UPDATE_DENIED);
     }
 
     const updateData = {};
-    if (categoryData.name) updateData.name = categoryData.name;
-    if (categoryData.type) {
-      if (!['INCOME', 'EXPENSE'].includes(categoryData.type)) {
-        throw new Error(ERROR_MESSAGES.INVALID_CATEGORY_TYPE);
+    
+    // NÆ°u lÃ  category cá»§a há»‡ thá»‘ng, chá»‰ cho phÃ©p báºt táº¯t
+    if (category.user_id === null) {
+      if (categoryData.is_active !== undefined) {
+        updateData.is_active = categoryData.is_active;
+      } else {
+        throw new Error(ERROR_MESSAGES.CATEGORY_UPDATE_DENIED);
       }
-      updateData.type = categoryData.type;
-    }
-    if (categoryData.icon_name !== undefined) {
-      updateData.icon_name = categoryData.icon_name;
+    } else {
+      if (categoryData.name !== undefined) updateData.name = categoryData.name;
+      if (categoryData.type !== undefined) {
+        if (!['INCOME', 'EXPENSE'].includes(categoryData.type)) {
+          throw new Error(ERROR_MESSAGES.INVALID_CATEGORY_TYPE);
+        }
+        updateData.type = categoryData.type;
+      }
+      if (categoryData.icon_name !== undefined) {
+        updateData.icon_name = categoryData.icon_name;
+      }
+      if (categoryData.is_active !== undefined) {
+        updateData.is_active = categoryData.is_active;
+      }
     }
 
     const updatedCategory = await categoryRepository.update(categoryId, updateData);

@@ -1,4 +1,4 @@
-import { z } from 'zod';
+﻿import { z } from 'zod';
 import ApiResponse from '../../utils/responseUtils.js';
 
 // ---------------------------------------------------------------------------
@@ -25,6 +25,7 @@ const updateCategorySchema = z.object({
     })
     .optional(),
   icon_name: z.string().max(255).optional().nullable(),
+  is_active: z.boolean().optional(),
 });
 
 // ---------------------------------------------------------------------------

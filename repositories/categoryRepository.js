@@ -16,20 +16,23 @@ const categoryRepository = {
   /**
    * Find all non-deleted, active categories for a user.
    * - deleted_at = null: excludes soft-deleted (permanently removed) categories.
-   * - is_active = true: excludes hidden categories (not shown in dropdowns).
    * @param {string} userId
    * @param {string|null} [type] - Optional type filter ('income' or 'expense')
+   * @param {boolean} [includeInactive=false] - Whether to include is_active=false categories
    * @returns {Promise<Array<Object>>}
    */
-  async findByUserId(userId, type = null) {
+  async findByUserId(userId, type = null, includeInactive = false) {
     const where = {
       OR: [
         { user_id: userId },
         { user_id: null }
       ],
-      is_active: true,
       deleted_at: null,
     };
+
+    if (!includeInactive) {
+      where.is_active = true;
+    }
 
     if (type) {
       where.type = type;

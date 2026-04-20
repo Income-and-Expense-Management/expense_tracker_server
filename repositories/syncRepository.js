@@ -40,7 +40,10 @@ const syncRepository = {
   async getChangedCategories(userId, since) {
     return await prisma.category.findMany({
       where: {
-        user_id: userId,
+        OR: [
+          { user_id: userId },
+          { user_id: null }
+        ],
         updated_at: { gt: since },
       },
       orderBy: { updated_at: 'asc' },

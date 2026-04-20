@@ -21,13 +21,13 @@ const categoryRepository = {
    * @param {string|null} [type] - Optional type filter ('income' or 'expense')
    * @returns {Promise<Array<Object>>}
    */
-  async findByUserId(userId, type = null) {
+  async findByUserId(userId, type = null, is_active = true) {
     const where = {
       OR: [
         { user_id: userId },
         { user_id: null }
       ],
-      is_active: true,
+      is_active: is_active,
       deleted_at: null,
     };
 

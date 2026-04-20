@@ -57,9 +57,9 @@ const categoryController = {
   async getAllCategories(req, res) {
     try {
       const userId = req.user.userId;
-      const { type } = req.query;
+      const { type, is_active } = req.query;
 
-      const categories = await categoryService.getAllCategories(userId, type);
+      const categories = await categoryService.getAllCategories(userId, type, is_active);
 
       return ApiResponse.success(res, categories, 'Lấy danh sách danh mục thành công');
     } catch (error) {

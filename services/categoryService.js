@@ -60,9 +60,9 @@ export const categoryService = {
    * @param {string|null} [type=null] - Optional type filter ('income' or 'expense')
    * @returns {Promise<Array<Object>>} Array of categories
    */
-  async getAllCategories(userId, type = null) {
+  async getAllCategories(userId, type = null, is_active = true) {
     logger.info('CategoryService.getAllCategories for userId:', userId);
-    const categories = await categoryRepository.findByUserId(userId, type);
+    const categories = await categoryRepository.findByUserId(userId, type, is_active);
     return categories;
   },
 

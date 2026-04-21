@@ -16,7 +16,10 @@ const transactionRepository = {
   },
 
   async findByWalletId(walletId, filters = {}) {
-    const where = { wallet_id: walletId };
+    const where = { 
+      wallet_id: walletId,
+      deleted_at: null
+    };
 
     // Filter by type via the linked category (Single Source of Truth)
     if (filters.type) {
@@ -55,6 +58,7 @@ const transactionRepository = {
 
     const where = {
       wallet_id: { in: walletIds },
+      deleted_at: null
     };
 
     // Filter by type via the linked category (Single Source of Truth)
@@ -98,6 +102,16 @@ const transactionRepository = {
     });
   },
 
+  async softDelete(id) {
+    return await prisma.transaction.update({
+      where: { id },
+      data: {
+        deleted_at: new Date(),
+        updated_at: new Date(),
+      },
+    });
+  },
+
   async delete(id) {
     return await prisma.transaction.delete({
       where: { id },
@@ -117,6 +131,7 @@ const transactionRepository = {
   async getStatistics(walletId, startDate, endDate) {
     const where = {
       wallet_id: walletId,
+      deleted_at: null
     };
 
     if (startDate || endDate) {

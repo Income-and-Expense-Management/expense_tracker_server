@@ -22,6 +22,7 @@ export const transactionService = {
   async createTransaction(userId, transactionData) {
     logger.info('TransactionService.createTransaction for userId:', userId);
     const {
+      id,
       wallet_id,
       category_id,
       amount,
@@ -39,6 +40,7 @@ export const transactionService = {
     }
 
     const newTransaction = await transactionRepository.create({
+      id,
       wallet_id,
       category_id: category_id || null,
       amount: BigInt(amount),
@@ -203,7 +205,7 @@ export const transactionService = {
       throw new Error(ERROR_MESSAGES.TRANSACTION_DELETE_DENIED);
     }
 
-    await transactionRepository.delete(transactionId);
+    await transactionRepository.softDelete(transactionId);
 
     return { message: 'Xóa giao dịch thành công' };
   },

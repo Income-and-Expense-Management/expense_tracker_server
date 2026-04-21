@@ -16,9 +16,10 @@ const transactionController = {
   async createTransaction(req, res) {
     try {
       const userId = req.user.userId;
-      const { wallet_id, category_id, amount, type, transaction_date, icon_id, note } = req.body;
+      const { id, wallet_id, category_id, amount, type, transaction_date, icon_id, note } = req.body;
 
       const transaction = await transactionService.createTransaction(userId, {
+        id,
         wallet_id,
         category_id,
         amount,
@@ -215,9 +216,10 @@ const transactionController = {
     try {
       const userId = req.user.userId;
       const { walletId } = req.params;
-      const { category_id, amount, type, transaction_date, icon_id, note } = req.body;
+      const { id, category_id, amount, type, transaction_date, icon_id, note } = req.body;
 
       const transaction = await transactionService.createTransaction(userId, {
+        id,
         wallet_id: walletId,
         category_id,
         amount,

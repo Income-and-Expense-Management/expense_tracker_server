@@ -6,6 +6,7 @@ import ApiResponse from '../../utils/responseUtils.js';
 // ---------------------------------------------------------------------------
 
 const createTransactionSchema = z.object({
+  id: z.string().uuid('id không hợp lệ').optional(),
   wallet_id: z.string({ required_error: 'Ví là bắt buộc' }).uuid('wallet_id không hợp lệ'),
   category_id: z.union([z.string().min(1, 'category_id không hợp lệ'), z.literal('')]).transform(v => v === '' ? null : v).optional().nullable(),
   amount: z.coerce

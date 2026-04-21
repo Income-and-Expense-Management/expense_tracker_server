@@ -14,9 +14,10 @@ const budgetController = {
   async createBudget(req, res) {
     try {
       const userId = req.user.userId;
-      const { wallet_id, category_id, target_amount, start_date, end_date } = req.body;
+      const { id, wallet_id, category_id, target_amount, start_date, end_date } = req.body;
 
       const budget = await budgetService.createBudget(userId, {
+        id,
         wallet_id,
         category_id,
         target_amount,

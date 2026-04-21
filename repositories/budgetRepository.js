@@ -14,7 +14,7 @@ const budgetRepository = {
   },
 
   async findByWalletId(walletId, filters = {}) {
-    const where = { wallet_id: walletId };
+    const where = { wallet_id: walletId, deleted_at: null };
 
     if (filters.category_id) {
       where.category_id = filters.category_id;
@@ -37,6 +37,7 @@ const budgetRepository = {
 
     const where = {
       wallet_id: { in: walletIds },
+      deleted_at: null,
     };
 
     if (filters.wallet_id) {
@@ -54,18 +55,24 @@ const budgetRepository = {
   },
 
   async update(id, budgetData) {
+    // Remove undefined values to prevent Prisma from rejecting them
+    const data = Object.fromEntries(Object.entries(budgetData).filter(([_, v]) => v !== undefined));
     return await prisma.budget.update({
       where: { id },
       data: {
-        ...budgetData,
+        ...data,
         updated_at: new Date(),
       },
     });
   },
 
   async delete(id) {
-    return await prisma.budget.delete({
+    return await prisma.budget.update({
       where: { id },
+      data: {
+        deleted_at: new Date(),
+        updated_at: new Date(),
+      },
     });
   },
 

@@ -6,6 +6,7 @@ import ApiResponse from '../../utils/responseUtils.js';
 // ---------------------------------------------------------------------------
 
 const createBudgetSchema = z.object({
+  id: z.string().uuid('id không hợp lệ').optional(),
   wallet_id: z.string({ required_error: 'Ví là bắt buộc' }).uuid('wallet_id không hợp lệ'),
   category_id: z
     .string({ required_error: 'Danh mục là bắt buộc' })

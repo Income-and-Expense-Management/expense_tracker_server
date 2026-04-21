@@ -19,7 +19,7 @@ export const budgetService = {
    */
   async createBudget(userId, budgetData) {
     logger.info('BudgetService.createBudget for userId:', userId);
-    const { wallet_id, category_id, target_amount, start_date, end_date } = budgetData;
+    const { id, wallet_id, category_id, target_amount, start_date, end_date } = budgetData;
 
     // Verify wallet exists and belongs to user
     const wallet = await walletRepository.findById(wallet_id);
@@ -31,13 +31,16 @@ export const budgetService = {
       throw new Error(ERROR_MESSAGES.BUDGET_ACCESS_DENIED);
     }
 
-    const newBudget = await budgetRepository.create({
+    const dataPayload = {
       wallet_id,
       category_id,
       target_amount: BigInt(target_amount),
       start_date: start_date ? new Date(start_date) : null,
       end_date: end_date ? new Date(end_date) : null,
-    });
+    };
+    if (id) dataPayload.id = id;
+
+    const newBudget = await budgetRepository.create(dataPayload);
 
     return {
       ...newBudget,

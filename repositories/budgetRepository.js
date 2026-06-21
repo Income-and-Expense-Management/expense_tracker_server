@@ -76,6 +76,16 @@ const budgetRepository = {
     });
   },
 
+  async deleteByCategoryId(categoryId) {
+    return await prisma.budget.updateMany({
+      where: { category_id: categoryId, deleted_at: null },
+      data: {
+        deleted_at: new Date(),
+        updated_at: new Date(),
+      },
+    });
+  },
+
   /**
    * Get total spent (expense transactions) for a budget's wallet + category
    * within the budget's date range.

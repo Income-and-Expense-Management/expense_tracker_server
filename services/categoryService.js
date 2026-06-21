@@ -1,4 +1,5 @@
 import categoryRepository from '../repositories/categoryRepository.js';
+import budgetRepository from '../repositories/budgetRepository.js';
 import { ERROR_MESSAGES } from '../utils/errorMessages.js';
 import { logger } from '../utils/logger.js';
 
@@ -145,6 +146,7 @@ export const categoryService = {
     }
 
     await categoryRepository.softDelete(categoryId);
+    await budgetRepository.deleteByCategoryId(categoryId);
 
     return { message: 'Xóa danh mục thành công' };
   },
